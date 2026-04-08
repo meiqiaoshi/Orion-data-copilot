@@ -1,3 +1,4 @@
+from app.executor import execute_plan
 from app.planner import plan_query
 from app.schemas import UserQuery
 
@@ -17,13 +18,19 @@ def main() -> None:
             break
 
         query = UserQuery(raw_text=user_input)
-        result = plan_query(query)
+        plan = plan_query(query)
+        execution = execute_plan(plan)
 
-        print("\n--- Result ---")
-        print(f"Intent: {result.intent}")
-        print(f"Action: {result.action}")
-        print(f"Message: {result.message}")
-        print("--------------\n")
+        print("\n--- Plan ---")
+        print(f"Intent: {plan.intent}")
+        print(f"Action: {plan.action}")
+        print(f"Message: {plan.message}")
+
+        print("\n--- Execution ---")
+        print(f"Status: {execution.status}")
+        print(f"Source: {execution.source}")
+        print(f"Output: {execution.output}")
+        print("-----------------\n")
 
 
 if __name__ == "__main__":

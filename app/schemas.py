@@ -14,6 +14,18 @@ ActionType = Literal[
     "clarify_or_fallback",
 ]
 
+ExecutionStatus = Literal[
+    "success",
+    "not_implemented",
+    "error",
+]
+
+SourceType = Literal[
+    "ingestflow",
+    "sentineldq",
+    "system",
+]
+
 
 @dataclass(slots=True)
 class UserQuery:
@@ -25,3 +37,10 @@ class PlanResult:
     intent: IntentType
     action: ActionType
     message: str
+
+
+@dataclass(slots=True)
+class ExecutionResult:
+    status: ExecutionStatus
+    source: SourceType
+    output: str
