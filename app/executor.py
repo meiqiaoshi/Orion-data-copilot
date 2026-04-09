@@ -1,23 +1,22 @@
 from app.schemas import ExecutionResult, PlanResult
+from app.connectors.ingestflow import get_failed_ingestion_runs
 
 
 def execute_plan(plan: PlanResult) -> ExecutionResult:
     if plan.action == "query_ingestion_runs":
+        data = get_failed_ingestion_runs()
+
         return ExecutionResult(
             status="success",
             source="ingestflow",
-            output=(
-                "Mock result: found failed ingestion jobs from IngestFlow metadata store."
-            ),
+            output=str(data),
         )
 
     if plan.action == "query_sentineldq":
         return ExecutionResult(
-            status="success",
+            status="not_implemented",
             source="sentineldq",
-            output=(
-                "Mock result: found datasets with recent data quality issues."
-            ),
+            output="SentinelDQ integration not implemented yet.",
         )
 
     return ExecutionResult(
