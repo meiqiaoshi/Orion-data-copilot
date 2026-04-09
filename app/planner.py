@@ -1,4 +1,5 @@
-from app.schemas import PlanResult, TimeFilter, UserQuery
+from app.entity_parser import parse_config_path, parse_pipeline_name
+from app.schemas import EntityFilter, PlanResult, TimeFilter, UserQuery
 from app.time_parser import parse_time_window
 
 
@@ -14,13 +15,34 @@ def plan_query(query: UserQuery) -> PlanResult:
             end_time=parsed_window.end_time,
         )
 
+    config_path = parse_config_path(query.raw_text)
+    pipeline_name = parse_pipeline_name(query.raw_text)
+
+    entity_filter = None
+    if config_path is not None or pipeline_name is not None:
+        entity_filter = EntityFilter(
+            config_path=config_path,
+            pipeline_name=pipeline_name,
+        )
+
     if "failed" in text or "failure" in text:
         return PlanResult(
             intent="pipeline_failure_lookup",
             action="query_ingestion_runs",
-            message="This query looks like a request to inspect failed pipeline runs.",
+            message="This query looks like a request to inspect failed ingestion runs.",
             time_filter=time_filter,
+            entity_filter=entity_filter,
         )
+
+    if "recent" in text or "latest" in text:
+        if "run" in text or "runs" in text or "jobs" in text:
+            return PlanResult(
+                intent="pipeline_run_lookup",
+                action="query_recent_ingestion_runs",
+                message="This query looks like a request to inspect recent ingestion runs.",
+                time_filter=time_filter,
+                entity_filter=entity_filter,
+            )
 
     if "quality" in text or "unhealthy" in text:
         return PlanResult(
@@ -28,6 +50,7 @@ def plan_query(query: UserQuery) -> PlanResult:
             action="query_sentineldq",
             message="This query looks like a request to inspect data quality issues.",
             time_filter=time_filter,
+            entity_filter=entity_filter,
         )
 
     return PlanResult(
@@ -35,4 +58,5 @@ def plan_query(query: UserQuery) -> PlanResult:
         action="clarify_or_fallback",
         message="I could not confidently classify this query yet.",
         time_filter=time_filter,
+        entity_filter=entity_filter,
     )
