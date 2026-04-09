@@ -1,10 +1,17 @@
-from app.schemas import ExecutionResult, PlanResult
 from app.connectors.ingestflow import get_failed_ingestion_runs
+from app.schemas import ExecutionResult, PlanResult
 
 
 def execute_plan(plan: PlanResult) -> ExecutionResult:
     if plan.action == "query_ingestion_runs":
-        data = get_failed_ingestion_runs()
+        data = get_failed_ingestion_runs(time_filter=plan.time_filter)
+
+        if data and "error" in data[0]:
+            return ExecutionResult(
+                status="error",
+                source="ingestflow",
+                output=data[0]["error"],
+            )
 
         return ExecutionResult(
             status="success",
