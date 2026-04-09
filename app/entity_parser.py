@@ -15,3 +15,10 @@ def parse_pipeline_name(text: str) -> str | None:
     if match:
         return match.group(1)
     return None
+
+
+def parse_dataset_name(text: str) -> str | None:
+    match = re.search(r"\bdataset\s+([a-zA-Z0-9_\-]+)\b", text, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None

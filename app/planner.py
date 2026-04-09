@@ -1,4 +1,8 @@
-from app.entity_parser import parse_config_path, parse_pipeline_name
+from app.entity_parser import (
+    parse_config_path,
+    parse_dataset_name,
+    parse_pipeline_name,
+)
 from app.schemas import EntityFilter, PlanResult, TimeFilter, UserQuery
 from app.time_parser import parse_time_window
 
@@ -17,12 +21,14 @@ def plan_query(query: UserQuery) -> PlanResult:
 
     config_path = parse_config_path(query.raw_text)
     pipeline_name = parse_pipeline_name(query.raw_text)
+    dataset_name = parse_dataset_name(query.raw_text)
 
     entity_filter = None
-    if config_path is not None or pipeline_name is not None:
+    if any([config_path is not None, pipeline_name is not None, dataset_name is not None]):
         entity_filter = EntityFilter(
             config_path=config_path,
             pipeline_name=pipeline_name,
+            dataset_name=dataset_name,
         )
 
     if "failed" in text or "failure" in text:
@@ -44,10 +50,16 @@ def plan_query(query: UserQuery) -> PlanResult:
                 entity_filter=entity_filter,
             )
 
-    if "quality" in text or "unhealthy" in text:
+    if (
+        "quality" in text
+        or "unhealthy" in text
+        or "dq" in text
+        or "data quality" in text
+        or "issues" in text
+    ):
         return PlanResult(
             intent="data_quality_lookup",
-            action="query_sentineldq",
+            action="query_sentineldq_issues",
             message="This query looks like a request to inspect data quality issues.",
             time_filter=time_filter,
             entity_filter=entity_filter,

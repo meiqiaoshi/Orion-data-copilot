@@ -15,7 +15,7 @@ IntentType = Literal[
 ActionType = Literal[
     "query_ingestion_runs",
     "query_recent_ingestion_runs",
-    "query_sentineldq",
+    "query_sentineldq_issues",
     "clarify_or_fallback",
 ]
 
@@ -48,6 +48,7 @@ class TimeFilter:
 class EntityFilter:
     config_path: str | None = None
     pipeline_name: str | None = None
+    dataset_name: str | None = None
 
 
 @dataclass(slots=True)

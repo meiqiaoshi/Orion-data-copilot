@@ -2,9 +2,11 @@ from app.connectors.ingestflow import (
     get_failed_ingestion_runs,
     get_recent_ingestion_runs,
 )
+from app.connectors.sentineldq import get_unhealthy_datasets
 from app.formatter import (
     format_failed_ingestion_runs,
     format_recent_ingestion_runs,
+    format_unhealthy_datasets,
 )
 from app.schemas import ExecutionResult, PlanResult
 
@@ -56,11 +58,27 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
             ),
         )
 
-    if plan.action == "query_sentineldq":
+    if plan.action == "query_sentineldq_issues":
+        data = get_unhealthy_datasets(
+            time_filter=plan.time_filter,
+            entity_filter=plan.entity_filter,
+        )
+
+        if data and "error" in data[0]:
+            return ExecutionResult(
+                status="error",
+                source="sentineldq",
+                output=data[0]["error"],
+            )
+
         return ExecutionResult(
-            status="not_implemented",
+            status="success",
             source="sentineldq",
-            output="SentinelDQ integration not implemented yet.",
+            output=format_unhealthy_datasets(
+                rows=data,
+                time_filter=plan.time_filter,
+                entity_filter=plan.entity_filter,
+            ),
         )
 
     return ExecutionResult(
