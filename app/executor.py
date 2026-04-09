@@ -1,4 +1,5 @@
 from app.connectors.ingestflow import get_failed_ingestion_runs
+from app.formatter import format_failed_ingestion_runs
 from app.schemas import ExecutionResult, PlanResult
 
 
@@ -13,10 +14,15 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
                 output=data[0]["error"],
             )
 
+        formatted_output = format_failed_ingestion_runs(
+            rows=data,
+            time_filter=plan.time_filter,
+        )
+
         return ExecutionResult(
             status="success",
             source="ingestflow",
-            output=str(data),
+            output=formatted_output,
         )
 
     if plan.action == "query_sentineldq":
