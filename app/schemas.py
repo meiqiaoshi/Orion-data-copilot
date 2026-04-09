@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal
 
 
@@ -33,10 +36,18 @@ class UserQuery:
 
 
 @dataclass(slots=True)
+class TimeFilter:
+    label: str
+    start_time: datetime
+    end_time: datetime
+
+
+@dataclass(slots=True)
 class PlanResult:
     intent: IntentType
     action: ActionType
     message: str
+    time_filter: TimeFilter | None = None
 
 
 @dataclass(slots=True)

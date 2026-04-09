@@ -26,6 +26,15 @@ def main() -> None:
         print(f"Action: {plan.action}")
         print(f"Message: {plan.message}")
 
+        if plan.time_filter is not None:
+            print(
+                "Time Filter: "
+                f"{plan.time_filter.label} "
+                f"({plan.time_filter.start_time} -> {plan.time_filter.end_time})"
+            )
+        else:
+            print("Time Filter: none")
+
         print("\n--- Execution ---")
         print(f"Status: {execution.status}")
         print(f"Source: {execution.source}")
