@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from app.entity_parser import (
     parse_config_path,
     parse_dataset_name,
@@ -24,7 +26,13 @@ def plan_query(query: UserQuery) -> PlanResult:
     dataset_name = parse_dataset_name(query.raw_text)
 
     entity_filter = None
-    if any([config_path is not None, pipeline_name is not None, dataset_name is not None]):
+    if any(
+        [
+            config_path is not None,
+            pipeline_name is not None,
+            dataset_name is not None,
+        ]
+    ):
         entity_filter = EntityFilter(
             config_path=config_path,
             pipeline_name=pipeline_name,
@@ -56,11 +64,13 @@ def plan_query(query: UserQuery) -> PlanResult:
         or "dq" in text
         or "data quality" in text
         or "issues" in text
+        or "alert" in text
+        or "alerts" in text
     ):
         return PlanResult(
             intent="data_quality_lookup",
             action="query_sentineldq_issues",
-            message="This query looks like a request to inspect data quality issues.",
+            message="This query looks like a request to inspect data quality alerts.",
             time_filter=time_filter,
             entity_filter=entity_filter,
         )

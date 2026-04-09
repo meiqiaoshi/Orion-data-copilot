@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from app.executor import execute_plan
 from app.planner import plan_query
 from app.schemas import UserQuery
@@ -34,6 +36,16 @@ def main() -> None:
             )
         else:
             print("Time Filter: none")
+
+        if plan.entity_filter is not None:
+            print(
+                "Entity Filter: "
+                f"config_path={plan.entity_filter.config_path}, "
+                f"pipeline_name={plan.entity_filter.pipeline_name}, "
+                f"dataset_name={plan.entity_filter.dataset_name}"
+            )
+        else:
+            print("Entity Filter: none")
 
         print("\n--- Execution ---")
         print(f"Status: {execution.status}")

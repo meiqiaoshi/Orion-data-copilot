@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from app.connectors.ingestflow import (
     get_failed_ingestion_runs,
     get_recent_ingestion_runs,
 )
-from app.connectors.sentineldq import get_unhealthy_datasets
+from app.connectors.sentineldq import get_recent_dq_alerts
 from app.formatter import (
+    format_dq_alerts,
     format_failed_ingestion_runs,
     format_recent_ingestion_runs,
-    format_unhealthy_datasets,
 )
 from app.schemas import ExecutionResult, PlanResult
 
@@ -59,7 +61,7 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
         )
 
     if plan.action == "query_sentineldq_issues":
-        data = get_unhealthy_datasets(
+        data = get_recent_dq_alerts(
             time_filter=plan.time_filter,
             entity_filter=plan.entity_filter,
         )
@@ -74,7 +76,7 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
         return ExecutionResult(
             status="success",
             source="sentineldq",
-            output=format_unhealthy_datasets(
+            output=format_dq_alerts(
                 rows=data,
                 time_filter=plan.time_filter,
                 entity_filter=plan.entity_filter,
