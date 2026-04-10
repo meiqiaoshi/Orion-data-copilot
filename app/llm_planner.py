@@ -156,6 +156,7 @@ def _parse_plan_json(raw_json: str) -> PlanResult:
         message=message,
         time_filter=time_filter,
         entity_filter=entity_filter,
+        planner_source="llm",
     )
 
 

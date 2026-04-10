@@ -58,6 +58,7 @@ class PlanResult:
     message: str
     time_filter: TimeFilter | None = None
     entity_filter: EntityFilter | None = None
+    planner_source: str = "rules"
 
 
 @dataclass(slots=True)

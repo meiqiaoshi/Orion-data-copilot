@@ -5,11 +5,12 @@ from app.entity_parser import (
     parse_dataset_name,
     parse_pipeline_name,
 )
+from app.llm_planner import plan_query_with_llm
 from app.schemas import EntityFilter, PlanResult, TimeFilter, UserQuery
 from app.time_parser import parse_time_window
 
 
-def plan_query(query: UserQuery) -> PlanResult:
+def _plan_query_with_rules(query: UserQuery) -> PlanResult:
     text = query.raw_text.lower()
     parsed_window = parse_time_window(query.raw_text)
 
@@ -46,6 +47,7 @@ def plan_query(query: UserQuery) -> PlanResult:
             message="This query looks like a request to inspect failed ingestion runs.",
             time_filter=time_filter,
             entity_filter=entity_filter,
+            planner_source="rules",
         )
 
     if "recent" in text or "latest" in text:
@@ -56,6 +58,7 @@ def plan_query(query: UserQuery) -> PlanResult:
                 message="This query looks like a request to inspect recent ingestion runs.",
                 time_filter=time_filter,
                 entity_filter=entity_filter,
+                planner_source="rules",
             )
 
     if (
@@ -73,6 +76,7 @@ def plan_query(query: UserQuery) -> PlanResult:
             message="This query looks like a request to inspect data quality alerts.",
             time_filter=time_filter,
             entity_filter=entity_filter,
+            planner_source="rules",
         )
 
     return PlanResult(
@@ -81,4 +85,14 @@ def plan_query(query: UserQuery) -> PlanResult:
         message="I could not confidently classify this query yet.",
         time_filter=time_filter,
         entity_filter=entity_filter,
+        planner_source="rules",
     )
+
+
+def plan_query(query: UserQuery, use_llm: bool = True) -> PlanResult:
+    if use_llm:
+        llm_plan = plan_query_with_llm(query)
+        if llm_plan is not None:
+            return llm_plan
+
+    return _plan_query_with_rules(query)

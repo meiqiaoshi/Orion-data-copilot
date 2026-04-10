@@ -24,6 +24,7 @@ def main() -> None:
         execution = execute_plan(plan)
 
         print("\n--- Plan ---")
+        print(f"Planner: {plan.planner_source}")
         print(f"Intent: {plan.intent}")
         print(f"Action: {plan.action}")
         print(f"Message: {plan.message}")
