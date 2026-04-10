@@ -13,6 +13,57 @@ from app.formatter import (
 from app.schemas import ExecutionResult, PlanResult
 
 
+def _build_user_friendly_error(source: str, error_text: str) -> str:
+    normalized = error_text.lower()
+
+    if "no module named" in normalized and "sentineldq" in normalized:
+        return (
+            "I couldn't access SentinelDQ because the package is not available in "
+            "the current environment. Please install SentinelDQ or make sure it is "
+            "importable before running this query."
+        )
+
+    if "table with name ingestion_runs does not exist" in normalized:
+        return (
+            "I couldn't query the ingestion metadata store because the "
+            "'ingestion_runs' table was not found. Please verify the DuckDB path "
+            "and confirm the IngestFlow schema exists."
+        )
+
+    if "no such table: alerts" in normalized or "table alerts does not exist" in normalized:
+        return (
+            "I couldn't query SentinelDQ alerts because the 'alerts' table was not "
+            "found. Please verify the SentinelDQ metadata database path and schema."
+        )
+
+    if "no such table" in normalized:
+        return (
+            f"I couldn't query the {source} metadata store because an expected table "
+            "was not found. Please verify the database path and schema."
+        )
+
+    if "permission" in normalized or "access" in normalized:
+        return (
+            f"I couldn't access the {source} metadata store due to a permissions "
+            "issue. Please verify file access and environment configuration."
+        )
+
+    if "unable to open database file" in normalized:
+        return (
+            f"I couldn't open the {source} metadata database. Please verify the "
+            "configured database path and make sure the file exists."
+        )
+
+    return (
+        f"I ran into an error while querying the {source} metadata store. "
+        f"Details: {error_text}"
+    )
+
+
+def _is_error_result(data: list[dict]) -> bool:
+    return bool(data) and isinstance(data[0], dict) and "error" in data[0]
+
+
 def execute_plan(plan: PlanResult) -> ExecutionResult:
     if plan.action == "query_ingestion_runs":
         data = get_failed_ingestion_runs(
@@ -20,11 +71,11 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
             entity_filter=plan.entity_filter,
         )
 
-        if data and "error" in data[0]:
+        if _is_error_result(data):
             return ExecutionResult(
                 status="error",
                 source="ingestflow",
-                output=data[0]["error"],
+                output=_build_user_friendly_error("ingestflow", data[0]["error"]),
             )
 
         return ExecutionResult(
@@ -43,11 +94,11 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
             entity_filter=plan.entity_filter,
         )
 
-        if data and "error" in data[0]:
+        if _is_error_result(data):
             return ExecutionResult(
                 status="error",
                 source="ingestflow",
-                output=data[0]["error"],
+                output=_build_user_friendly_error("ingestflow", data[0]["error"]),
             )
 
         return ExecutionResult(
@@ -66,11 +117,11 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
             entity_filter=plan.entity_filter,
         )
 
-        if data and "error" in data[0]:
+        if _is_error_result(data):
             return ExecutionResult(
                 status="error",
                 source="sentineldq",
-                output=data[0]["error"],
+                output=_build_user_friendly_error("sentineldq", data[0]["error"]),
             )
 
         return ExecutionResult(
@@ -86,5 +137,9 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
     return ExecutionResult(
         status="not_implemented",
         source="system",
-        output="No executable handler is available for this query yet.",
+        output=(
+            "I understood the query, but I don't have an execution path for it yet. "
+            "Try asking about failed ingestion runs, recent ingestion runs, or data "
+            "quality alerts."
+        ),
     )
