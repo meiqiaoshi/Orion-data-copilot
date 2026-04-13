@@ -10,6 +10,14 @@ For design details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Example 
 - **Execution**: Routes to **IngestFlow** metadata in DuckDB (`ingestion_runs`) or **SentinelDQ** alerts (`app/executor.py`).
 - **Output**: Formatted text for failures, recent runs, or DQ alerts (`app/formatter.py`).
 
+Planning produces a **fixed set of intents** wired to connector queries; it does **not** generate arbitrary SQL for ad-hoc schemas.
+
+## Status (vs. earlier roadmap)
+
+**Shipped in this repo:** Interactive **CLI**; **hybrid** planner (OpenAI + rules); execution paths for **failed / recent IngestFlow runs** (DuckDB) and **SentinelDQ alerts** (when the package is available); basic **formatting** of those results.
+
+**Still future work** (see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — *Future Directions*): open-ended **NL → SQL**, **web UI**, deeper **failure / root-cause analysis**, **multi-step** reasoning. The old README listed some of these as “planned”; they are **not** part of the current codebase.
+
 ## Requirements
 
 - **Python 3.10+** recommended (code uses modern typing; project has been used with 3.9+).
