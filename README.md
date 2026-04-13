@@ -1,292 +1,58 @@
-# IngestFlow
+# Orion Data Copilot
 
-[![CI](https://github.com/meiqiaoshi/Ingestflow/actions/workflows/ci.yml/badge.svg)](https://github.com/meiqiaoshi/Ingestflow/actions/workflows/ci.yml)
+Natural-language interface for querying **data platform metadata**: pipeline runs (IngestFlow / DuckDB) and data-quality signals (SentinelDQ). The system turns a plain-English question into a structured plan, runs the right connector, and prints a readable summary.
 
-A lightweight, config-driven data ingestion framework for onboarding diverse data sources into analytical systems.
+For design details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Example prompts are in [`docs/USE_CASES.md`](docs/USE_CASES.md).
 
----
+## What it does
 
-## 🚀 Overview
+- **Planner**: Tries an **LLM** (OpenAI) first, then falls back to **rule-based** classification (`app/planner.py`).
+- **Execution**: Routes to **IngestFlow** metadata in DuckDB (`ingestion_runs`) or **SentinelDQ** alerts (`app/executor.py`).
+- **Output**: Formatted text for failures, recent runs, or DQ alerts (`app/formatter.py`).
 
-IngestFlow is designed to simulate a production-style data ingestion layer in a modern data platform.  
-It enables users to define ingestion pipelines via configuration files, supporting multiple data sources, schema validation, and incremental loading.
+## Requirements
 
-Instead of writing ad-hoc scripts for each dataset, IngestFlow provides a reusable and extensible framework for standardized data ingestion.
+- **Python 3.10+** recommended (code uses modern typing; project has been used with 3.9+).
+- Dependencies used by the app:
+  - **duckdb** — query `warehouse.duckdb` (IngestFlow run history).
+  - **openai** — optional; enables the LLM planner. Without it, only the rule planner runs.
+  - **sentineldq** — optional; required for data-quality queries (`query_sentineldq_issues`).
 
-### Status (v0.1 milestone)
-
-The **v0.1** line is a **usable baseline**: YAML-driven pipelines into **DuckDB**, **incremental** loads, **run history** in `ingestion_runs`, **CLI** (`run`, `runs list`), integration tests, **CI** (Python 3.11–3.13 with optional Postgres checks), optional **Streamlit** run browser, and **Dependabot**.
-
-- **Config, columns, and observability:** [`docs/config_spec.md`](docs/config_spec.md) — see **section 9** for `ingestion_runs`, `source_path`, and the stderr JSON summary.
-- **Planned vs delivered:** [`docs/roadmap.md`](docs/roadmap.md).
-- **Release notes:** [`CHANGELOG.md`](CHANGELOG.md) (current: **0.1.0**).
-
-**Known limitations (v0.1):** CLI is **single-process** (no distributed scheduler); default warehouse is **local DuckDB**; supported sources are **CSV, Parquet, HTTP, PostgreSQL** as documented—broader platform integrations stay out of scope for this milestone.
-
----
-
-## Quick start
-
-Requires **Python 3.10+** and dependencies in `requirements.txt` (`pandas`, `pyyaml`, `duckdb`).
+Install (example):
 
 ```bash
-cd Ingestflow
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install duckdb openai
+# pip install sentineldq   # if you have the package and want DQ queries
 ```
 
-**Optional — install the repo as a package** (same Python **3.10+** as above; metadata in **`pyproject.toml`**):
+If you add a non-empty `requirements.txt` later, you can replace the line above with `pip install -r requirements.txt`.
+
+## Configuration
+
+- **LLM planner**: Set `OPENAI_API_KEY` in your environment. The default model name is configured in `app/llm_planner.py` (`plan_query_with_llm`).
+- **IngestFlow / DuckDB**: Connectors default to `warehouse.duckdb` in the current working directory. Ensure that file exists and contains an `ingestion_runs` table (e.g. from running [IngestFlow](https://github.com/meiqiaoshi/Ingestflow) pipelines).
+- **SentinelDQ**: Must be importable and configured as expected by `sentineldq.metadata.store.get_recent_alerts` for DQ queries to succeed.
+
+## Run
+
+From the repository root:
 
 ```bash
-pip install -e .
-ingestflow run --config configs/sample.yaml   # same as: python main.py run --config ...
+python main.py
 ```
 
-Run the sample pipeline:
-
-```bash
-python main.py run --config configs/sample.yaml
-```
-
-The same works as **`python main.py --config configs/sample.yaml`** (legacy; `run` is inserted automatically).
-
-List recent runs stored in the warehouse DuckDB (table `ingestion_runs`):
-
-```bash
-python main.py runs list
-python main.py runs list --db warehouse.duckdb --limit 10 --status success
-python main.py runs list --config-contains sample.yaml
-python main.py runs list --since 2024-01-01 --until 2025-12-31
-python main.py runs list --format json
-python main.py runs list --format csv
-python main.py runs list --format csv -o /tmp/runs.csv
-```
-
-**Run history (Streamlit, optional — Phase 7):** browse `ingestion_runs` in a browser with the same filters as `runs list`.
-
-```bash
-pip install -r requirements-dashboard.txt
-streamlit run scripts/dashboard_runs.py
-# or: make dashboard   (after installing requirements-dashboard.txt)
-```
-
-Set the DuckDB path in the sidebar (default `warehouse.duckdb`).
-
-Generate the sample Parquet file before running the Parquet pipeline:
-
-```bash
-python scripts/generate_sample_parquet.py
-```
-
-Then run the Parquet pipeline:
-
-```bash
-python main.py run --config configs/sample_parquet.yaml
-```
-
-Optional logging:
-
-```bash
-python main.py run --config configs/sample.yaml --verbose
-python main.py run --config configs/sample.yaml --quiet
-```
-
-Dry run (no DuckDB **writes**: no load, no checkpoint update, no `ingestion_runs` insert; incremental mode may still **read** the existing checkpoint to preview row counts):
-
-```bash
-python main.py run --config configs/sample.yaml --dry-run
-```
-
-Logs go to **stderr** at `INFO` by default.
-
-After each **`run`** completes, **one extra line of JSON** is also written to stderr (`event: ingestflow_run`, with `run_id`, `config_path`, `status`, `duration_seconds`, `rows_loaded`, etc.) for log pipelines; it is separate from the human-readable log format above. Use **`--no-json-summary`** on `run` to disable that line.
-
-Optional **`.env`** in the project directory sets environment variables before config load (`python-dotenv`). For HTTP sources, use **`${VAR_NAME}`** in `source.headers` or `source.body` string values to inject secrets without putting them in YAML (see `docs/config_spec.md`).
-
-### Tests
-
-```bash
-pip install -r requirements-dev.txt
-ruff check main.py src tests scripts
-pytest
-```
-
-On macOS/Linux you can use **`make check`** (or **`make lint`**, **`make test`**) from the repo root; see **`Makefile`**. **`make test-cov`** runs **pytest** with **coverage** for **`src/`** and **`main.py`** (same as CI). **`make sample-parquet`** then **`make run-sample`** matches the Quick start Parquet flow; **`make run-sample`** alone runs the CSV sample config.
-
-Optional: install **`pre-commit`** (`requirements-dev.txt`), run **`pre-commit install`**, then hooks match CI lint; **`make precommit`** runs all hooks once. To exercise the **Postgres** integration test locally, set **`INGESTFLOW_TEST_PG_DSN`** to a reachable DSN (CI sets this automatically with a service container).
-
-CI runs **`ruff check`** (Pyflakes-style `F` rules) and **pytest** (Postgres **extract** plus **`run_pipeline`** from a **`query`** or **`table`/`schema`** source into DuckDB) on **Python 3.11, 3.12, and 3.13**.
-
-Unit tests mock DuckDB so the default `warehouse.duckdb` is untouched. **`tests/test_integration_pipeline.py`** runs CSV → temp DuckDB `replace`; **`tests/test_integration_incremental.py`** runs two upsert loads with **incremental watermark** (same CSV path, growing file) in CI as well.
-
-On GitHub, pushes and pull requests to `main` run the same suite via **GitHub Actions** (`.github/workflows/ci.yml`). **Dependabot** (`.github/dependabot.yml`) proposes weekly updates for **pip** and **GitHub Actions**.
-
-By default DuckDB writes to **`warehouse.duckdb`** in the project root (override with `target.db_path` in YAML). That file may contain:
-
-- **Business tables** (e.g. `raw_orders` from the sample config)
-- **`ingestion_runs`** — one row per run (run id, status, timestamps, row counts, errors, `load_mode`, `incremental_enabled`, `db_path`, resolved `config_path`)
-- **`ingestion_state`** — incremental checkpoints when `load.incremental.enabled` is true
-
----
-
-## 🎯 Key Features
-
-- 🔌 **Multi-Source Ingestion**
-  - CSV files
-  - Parquet files (`pyarrow`)
-  - HTTP JSON (`source.type: http`, GET/POST, pagination, retries; bearer/basic/**OAuth2**/**HMAC-SHA256** via env)
-  - PostgreSQL read (`source.type: postgres`, `query` or **`table`/`schema`**, optional **`max_rows`** / **`statement_timeout_ms`**, `psycopg2-binary`)
-  - REST APIs (OAuth / HMAC — planned)
-  - Other databases (planned)
-
-- ⚙️ **Config-Driven Pipelines**
-  - Define ingestion logic using YAML/JSON configs
-  - No need to rewrite code for each dataset
-
-- 🧱 **Schema Validation & Transformation**
-  - Column renaming
-  - Type casting
-  - Basic validation rules
-
-- 🔄 **Incremental Loading**
-  - Append / upsert modes
-  - Timestamp watermark checkpoints (`ingestion_state`)
-
-- 🧾 **Run Metadata & Audit Logging**
-  - Track pipeline execution history
-  - Record row counts, duration, status
-
-- 📊 **Execution Reports**
-  - CLI summaries (initial)
-  - Dashboard (future)
-
----
-
-## 🧠 Project Motivation
-
-In real-world data engineering, one of the biggest challenges is **reliable and repeatable data ingestion**.
-
-Teams often rely on:
-- one-off scripts
-- inconsistent data formats
-- fragile pipelines
-
-IngestFlow aims to address this by providing:
-
-> A standardized, reusable ingestion layer that improves reliability, traceability, and scalability.
-
----
-
-## 🏗️ Architecture (High-Level)
-
-```
-        +-------------------+
-        |   Data Sources    |
-        +--------+----------+
-                 |
-                 v
-        +-------------------+
-        |   IngestFlow      |
-        |-------------------|
-        | - Extract         |
-        | - Validate        |
-        | - Transform       |
-        | - Load            |
-        | - Log Metadata    |
-        +-------------------+
-                 |
-                 v
-        +-------------------+
-        |   Target Storage  |
-        |  (DuckDB / etc.)  |
-        +-------------------+
-```
-
----
-
-## 📁 Project Structure (Planned)
-
-```
-ingestflow/
-│
-├── core/
-│   ├── extractor/
-│   ├── transformer/
-│   ├── loader/
-│   ├── validator/
-│   └── metadata/
-│
-├── connectors/
-│   ├── csv/
-│   ├── api/
-│   └── database/
-│
-├── configs/
-│   └── sample.yaml
-│
-├── runs/
-│   └── logs/
-│
-├── main.py
-└── README.md
-```
-
----
-
-## ⚙️ Example Config
-
-```yaml
-source:
-  type: csv
-  path: data/orders.csv
-
-target:
-  type: duckdb
-  table: raw_orders
-
-transform:
-  rename_columns:
-    orderid: order_id
-  cast_types:
-    amount: float
-    created_at: datetime
-
-load:
-  mode: append
-```
-
----
-
-## ▶️ Usage
-
-```bash
-python main.py run --config configs/sample.yaml
-```
-
-See `docs/config_spec.md` for the full YAML schema. **Section 9** there describes **`ingestion_runs`** columns, **`source_path`** rules, **`runs list` / Streamlit** output, and the **stderr JSON summary** line (`ingestflow_run`).
-
----
-
-## Roadmap
-
-Planned phases, **implementation status**, and **current focus** are documented in [`docs/roadmap.md`](docs/roadmap.md). The README stays user-facing; the roadmap file is the source of truth for what is shipped versus planned.
-
----
-
-## License
-
-Released under the [MIT License](LICENSE).
-
----
-
-## 🧾 Author
-
-Meiqiao Shi  
-MS Data Science @ Rutgers University
-
----
-
-## 📌 Note
-
-This project is built as part of a data engineering portfolio, focusing on system design, modular architecture, and production-like workflows.
+Type natural language questions at the `Query>` prompt. Use `exit` or `quit` to leave.
+
+## Project layout
+
+| Path | Role |
+|------|------|
+| `main.py` | CLI loop: read query → plan → execute → print |
+| `app/planner.py` | LLM + rule planning |
+| `app/executor.py` | Dispatch to connectors |
+| `app/connectors/ingestflow.py` | DuckDB queries |
+| `app/connectors/sentineldq.py` | SentinelDQ alerts |
+| `app/llm_planner.py` | OpenAI Responses API → JSON plan |
+| `app/time_parser.py`, `app/entity_parser.py` | Heuristic time/entity extraction for rules |
