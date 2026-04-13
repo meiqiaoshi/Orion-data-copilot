@@ -1,0 +1,13 @@
+---
+description: Use conda env dev for terminal test runs in this repo
+alwaysApply: true
+---
+
+# Conda environment for tests
+
+When running **tests** or **pytest** (or other verification commands) from the terminal in this project, use the **`dev`** conda environment first:
+
+- `conda activate dev` then run the command, or
+- `conda run -n dev pytest` (equivalent for one-off runs).
+
+Do not assume the system default Python for test execution unless `dev` is unavailable.

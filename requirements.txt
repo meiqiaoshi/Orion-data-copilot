@@ -1,0 +1,6 @@
+# Runtime dependencies for Orion Data Copilot
+duckdb>=1.0.0
+openai>=1.0.0
+
+# Optional: data-quality connector (install only if you use SentinelDQ locally)
+# sentineldq

@@ -31,11 +31,16 @@ Install (example):
 ```bash
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install duckdb openai
+pip install -r requirements.txt
 # pip install sentineldq   # if you have the package and want DQ queries
 ```
 
-If you add a non-empty `requirements.txt` later, you can replace the line above with `pip install -r requirements.txt`.
+For tests (includes runtime deps plus `pytest`):
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
 
 ## Configuration
 
