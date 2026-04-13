@@ -62,7 +62,7 @@ Formatter (AI-style response)
 
 ### Connectors
 - IngestFlow (DuckDB)
-- SentinelDQ (SQLite API)
+- SentinelDQ (Python package `sentineldq`; alerts via `get_recent_alerts`, typically backed by a local SQLite metadata DB)
 
 ### Formatter Layer
 - Produces human-readable output
