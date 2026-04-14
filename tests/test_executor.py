@@ -136,3 +136,38 @@ def test_analyze_pipeline_failure_scores_pipeline_keyword(mock_dq: object, mock_
     result = execute_plan(plan)
     assert result.status == "success"
     assert "pipeline match" in result.output.lower()
+
+
+@patch("app.executor.get_failed_ingestion_runs")
+@patch("app.executor.get_recent_dq_alerts")
+def test_analyze_pipeline_failure_scores_failure_config_stem(mock_dq: object, mock_failures: object) -> None:
+    mock_failures.return_value = [
+        {
+            "run_id": "r4",
+            "status": "failed",
+            "start_time": "2026-04-14T00:00:00",
+            "end_time": None,
+            "rows_loaded": 0,
+            "config_path": "configs/orders_pipeline.yaml",
+        }
+    ]
+    mock_dq.return_value = [
+        {
+            "created_at": "2026-04-14T00:05:00",
+            "severity": "medium",
+            "rule_name": "freshness",
+            "table_name": "staging",
+            "message": "orders_pipeline batch is stale",
+        }
+    ]
+
+    plan = PlanResult(
+        intent="pipeline_failure_lookup",
+        action="analyze_pipeline_failure",
+        message="test",
+        entity_filter=None,
+    )
+
+    result = execute_plan(plan)
+    assert result.status == "success"
+    assert "failure run config stem match" in result.output.lower()

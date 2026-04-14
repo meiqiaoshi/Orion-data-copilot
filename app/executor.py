@@ -96,11 +96,18 @@ def _derive_time_filter_from_failure(failures: list[dict]) -> TimeFilter | None:
     )
 
 
+def _stem_from_config_path(config_path: str | None) -> str:
+    if not config_path:
+        return ""
+    return config_path.rsplit("/", 1)[-1].rsplit(".", 1)[0].lower()
+
+
 def _score_alert(
     alert: dict,
     *,
     entity_filter: object,
     failure_start: datetime | None,
+    failure_config_path: str | None = None,
 ) -> tuple[int, list[str]]:
     # Score is additive; keep it simple and explainable.
     score = 0
@@ -124,12 +131,17 @@ def _score_alert(
             reasons.append(f"pipeline match: '{pipeline}' in table_name/message")
 
     config_path = getattr(entity_filter, "config_path", None) if entity_filter is not None else None
-    if isinstance(config_path, str) and config_path:
-        # Use the filename stem as a weak keyword signal.
-        stem = config_path.rsplit("/", 1)[-1].rsplit(".", 1)[0].lower()
-        if stem and (stem in table or stem in message):
+    stem_from_query = _stem_from_config_path(config_path if isinstance(config_path, str) else None)
+    if stem_from_query and (stem_from_query in table or stem_from_query in message):
+        score += 2
+        reasons.append(f"config keyword match: '{stem_from_query}'")
+
+    stem_from_failure = _stem_from_config_path(failure_config_path)
+    if stem_from_failure and (stem_from_failure in table or stem_from_failure in message):
+        # Avoid double-counting when the query already specified the same config stem.
+        if stem_from_query != stem_from_failure:
             score += 2
-            reasons.append(f"config keyword match: '{stem}'")
+            reasons.append(f"failure run config stem match: '{stem_from_failure}'")
 
     created_at = _parse_dt(alert.get("created_at"))
     if created_at is not None and failure_start is not None:
@@ -176,6 +188,8 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
 
         derived_time_filter = plan.time_filter or _derive_time_filter_from_failure(failures)
         failure_start = _parse_dt(failures[0].get("start_time"))
+        failure_cfg = failures[0].get("config_path")
+        failure_config_path = failure_cfg if isinstance(failure_cfg, str) else None
 
         dq = get_recent_dq_alerts(
             time_filter=derived_time_filter,
@@ -193,6 +207,7 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
                     alert,
                     entity_filter=plan.entity_filter,
                     failure_start=failure_start,
+                    failure_config_path=failure_config_path,
                 )
                 enriched = dict(alert)
                 enriched["_score"] = score
