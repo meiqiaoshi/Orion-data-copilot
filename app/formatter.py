@@ -26,6 +26,48 @@ def _build_filter_text(
     return " for " + ", ".join(filters)
 
 
+def format_root_cause_report(
+    failures: list[dict[str, Any]],
+    dq_alerts: list[dict[str, Any]],
+    time_filter: TimeFilter | None = None,
+    entity_filter: EntityFilter | None = None,
+) -> str:
+    filter_text = _build_filter_text(time_filter, entity_filter)
+
+    if not failures:
+        return f"I couldn't find any failed ingestion runs{filter_text} to analyze."
+
+    latest = failures[0]
+    lines: list[str] = []
+    lines.append(f"Root-cause analysis{filter_text}")
+    lines.append("")
+    lines.append("Failure signal:")
+    lines.append(
+        f"- latest failed run: {latest.get('run_id')} at {latest.get('start_time')} "
+        f"(rows_loaded={latest.get('rows_loaded')})"
+    )
+
+    if dq_alerts and not (isinstance(dq_alerts[0], dict) and "error" in dq_alerts[0]):
+        lines.append("")
+        lines.append("Related data quality alerts (heuristic match):")
+        for i, alert in enumerate(dq_alerts[:10], 1):
+            lines.append(
+                f"{i}. [{alert.get('severity')}] {alert.get('rule_name')} on "
+                f"{alert.get('table_name')} at {alert.get('created_at')}: {alert.get('message')}"
+            )
+    else:
+        lines.append("")
+        lines.append("Related data quality alerts: none found (or unavailable).")
+
+    lines.append("")
+    lines.append(
+        "Next steps: validate whether the alerting tables/datasets overlap with the failed pipeline's outputs, "
+        "and inspect logs around the failure time window."
+    )
+
+    return "\n".join(lines)
+
+
 # -----------------------------
 # IngestFlow (failed runs)
 # -----------------------------

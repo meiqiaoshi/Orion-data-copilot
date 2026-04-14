@@ -40,7 +40,16 @@ def _plan_query_with_rules(query: UserQuery) -> PlanResult:
             dataset_name=dataset_name,
         )
 
-    if "failed" in text or "failure" in text:
+    if "fail" in text or "failed" in text or "failure" in text:
+        if "why" in text or "root cause" in text or "cause" in text:
+            return PlanResult(
+                intent="pipeline_failure_lookup",
+                action="analyze_pipeline_failure",
+                message="This query looks like a request to analyze why an ingestion run failed.",
+                time_filter=time_filter,
+                entity_filter=entity_filter,
+                planner_source="rules",
+            )
         return PlanResult(
             intent="pipeline_failure_lookup",
             action="query_ingestion_runs",

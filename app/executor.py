@@ -8,6 +8,7 @@ from app.connectors.sentineldq import get_recent_dq_alerts
 from app.formatter import (
     format_dq_alerts,
     format_failed_ingestion_runs,
+    format_root_cause_report,
     format_recent_ingestion_runs,
 )
 from app.schemas import ExecutionResult, PlanResult
@@ -65,6 +66,53 @@ def _is_error_result(data: list[dict]) -> bool:
 
 
 def execute_plan(plan: PlanResult) -> ExecutionResult:
+    if plan.action == "analyze_pipeline_failure":
+        failures = get_failed_ingestion_runs(
+            time_filter=plan.time_filter,
+            entity_filter=plan.entity_filter,
+            limit=5,
+        )
+
+        if _is_error_result(failures):
+            return ExecutionResult(
+                status="error",
+                source="ingestflow",
+                output=_build_user_friendly_error("ingestflow", failures[0]["error"]),
+            )
+
+        if not failures:
+            return ExecutionResult(
+                status="success",
+                source="system",
+                output=format_root_cause_report(
+                    failures=[],
+                    dq_alerts=[],
+                    time_filter=plan.time_filter,
+                    entity_filter=plan.entity_filter,
+                ),
+            )
+
+        dq = get_recent_dq_alerts(
+            time_filter=plan.time_filter,
+            entity_filter=plan.entity_filter,
+            limit=25,
+        )
+
+        dq_alerts: list[dict] = dq
+        if _is_error_result(dq):
+            dq_alerts = []
+
+        return ExecutionResult(
+            status="success",
+            source="system",
+            output=format_root_cause_report(
+                failures=failures,
+                dq_alerts=dq_alerts,
+                time_filter=plan.time_filter,
+                entity_filter=plan.entity_filter,
+            ),
+        )
+
     if plan.action == "query_ingestion_runs":
         data = get_failed_ingestion_runs(
             time_filter=plan.time_filter,

@@ -68,3 +68,35 @@ def test_clarify_or_fallback_not_implemented() -> None:
     assert result.status == "not_implemented"
     assert result.source == "system"
     assert "don't have an execution path" in result.output
+
+
+@patch("app.executor.get_failed_ingestion_runs")
+@patch("app.executor.get_recent_dq_alerts")
+def test_analyze_pipeline_failure_links_failure_and_dq(mock_dq: object, mock_failures: object) -> None:
+    mock_failures.return_value = [
+        {
+            "run_id": "r2",
+            "status": "failed",
+            "start_time": "2026-04-14T00:00:00",
+            "end_time": None,
+            "rows_loaded": 0,
+            "config_path": "sample.yaml",
+        }
+    ]
+    mock_dq.return_value = [
+        {
+            "created_at": "2026-04-14T00:05:00",
+            "severity": "high",
+            "rule_name": "row_count_drop",
+            "table_name": "raw_orders",
+            "message": "Row count dropped",
+        }
+    ]
+
+    result = execute_plan(_plan("analyze_pipeline_failure"))
+    assert result.status == "success"
+    assert result.source == "system"
+    out = result.output.lower()
+    assert "root-cause analysis" in out
+    assert "latest failed run" in out
+    assert "related data quality alerts" in out

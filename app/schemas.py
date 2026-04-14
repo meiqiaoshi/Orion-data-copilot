@@ -16,6 +16,7 @@ ActionType = Literal[
     "query_ingestion_runs",
     "query_recent_ingestion_runs",
     "query_sentineldq_issues",
+    "analyze_pipeline_failure",
     "clarify_or_fallback",
 ]
 

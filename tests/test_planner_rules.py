@@ -11,6 +11,12 @@ def test_failed_jobs_maps_to_ingestion_runs() -> None:
     assert plan.planner_source == "rules"
 
 
+def test_why_failed_maps_to_root_cause_analysis() -> None:
+    plan = plan_query(UserQuery("Why did pipeline X fail yesterday?"), use_llm=False)
+    assert plan.intent == "pipeline_failure_lookup"
+    assert plan.action == "analyze_pipeline_failure"
+
+
 def test_recent_runs_maps_to_recent_ingestion() -> None:
     plan = plan_query(UserQuery("recent ingestion runs"), use_llm=False)
     assert plan.intent == "pipeline_run_lookup"

@@ -31,6 +31,7 @@ Allowed action values:
 - query_ingestion_runs
 - query_recent_ingestion_runs
 - query_sentineldq_issues
+- analyze_pipeline_failure
 - clarify_or_fallback
 
 Output schema:
@@ -52,6 +53,7 @@ Output schema:
 
 Guidelines:
 - Use pipeline_failure_lookup + query_ingestion_runs for failed ingestion/job queries.
+- Use pipeline_failure_lookup + analyze_pipeline_failure for "why did it fail" / root-cause style questions.
 - Use pipeline_run_lookup + query_recent_ingestion_runs for recent/latest run queries.
 - Use data_quality_lookup + query_sentineldq_issues for data quality, alert, unhealthy dataset queries.
 - Use clarify_or_fallback when the user's request does not map clearly to a supported query.
