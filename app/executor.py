@@ -10,8 +10,8 @@ from app.connectors.sentineldq import get_recent_dq_alerts
 from app.formatter import (
     format_dq_alerts,
     format_failed_ingestion_runs,
-    format_root_cause_report,
     format_recent_ingestion_runs,
+    format_root_cause_report,
 )
 from app.schemas import ExecutionResult, PlanResult, TimeFilter
 

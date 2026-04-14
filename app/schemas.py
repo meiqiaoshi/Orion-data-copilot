@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-
 IntentType = Literal[
     "pipeline_failure_lookup",
     "pipeline_run_lookup",

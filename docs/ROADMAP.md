@@ -14,11 +14,17 @@
 
 ---
 
-## Phase 2 (Next)
+## Phase 2 (In progress)
 
 ### Root Cause Analysis
-- Link ingestion failures with data quality alerts
-- Provide causal explanations
+**Shipped (heuristic MVP):**
+- Link latest ingestion failures with SentinelDQ alerts (time window around failure, ranked scoring)
+- Entity signals: `config_path`, `pipeline_name`, `dataset_name`; failure-run `config_path` stem for matching
+- Human-readable RCA output (failure details, DQ window, scored alerts with short reasons)
+
+**Next:**
+- Richer causal explanations (beyond keyword/time heuristics)
+- Optional cross-source joins when stable identifiers exist
 
 ### Improved LLM Planning
 - Better entity extraction

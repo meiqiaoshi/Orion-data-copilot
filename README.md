@@ -37,10 +37,11 @@ pip install -r requirements.txt
 # pip install sentineldq   # if you have the package and want DQ queries
 ```
 
-For tests (includes runtime deps plus `pytest`):
+For tests and lint (`pytest`, `ruff`; Ruff settings in `pyproject.toml`):
 
 ```bash
 pip install -r requirements-dev.txt
+ruff check app tests main.py
 pytest
 ```
 

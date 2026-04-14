@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.schemas import EntityFilter, TimeFilter
 from sentineldq.metadata.store import get_recent_alerts
+
+from app.schemas import EntityFilter, TimeFilter
 
 
 def get_recent_dq_alerts(
