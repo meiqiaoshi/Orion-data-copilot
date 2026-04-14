@@ -100,3 +100,4 @@ def test_analyze_pipeline_failure_links_failure_and_dq(mock_dq: object, mock_fai
     assert "root-cause analysis" in out
     assert "latest failed run" in out
     assert "related data quality alerts" in out
+    assert "score=" in out

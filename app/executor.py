@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from app.connectors.ingestflow import (
     get_failed_ingestion_runs,
     get_recent_ingestion_runs,
@@ -11,7 +13,7 @@ from app.formatter import (
     format_root_cause_report,
     format_recent_ingestion_runs,
 )
-from app.schemas import ExecutionResult, PlanResult
+from app.schemas import ExecutionResult, PlanResult, TimeFilter
 
 
 def _build_user_friendly_error(source: str, error_text: str) -> str:
@@ -65,6 +67,79 @@ def _is_error_result(data: list[dict]) -> bool:
     return bool(data) and isinstance(data[0], dict) and "error" in data[0]
 
 
+def _parse_dt(value: object) -> datetime | None:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _derive_time_filter_from_failure(failures: list[dict]) -> TimeFilter | None:
+    if not failures:
+        return None
+
+    latest = failures[0]
+    start = _parse_dt(latest.get("start_time"))
+    if start is None:
+        return None
+
+    # Heuristic: DQ alerts tend to cluster around the failure; use a small window.
+    window = timedelta(hours=6)
+    return TimeFilter(
+        label="around_failure",
+        start_time=start - window,
+        end_time=start + window,
+    )
+
+
+def _score_alert(
+    alert: dict,
+    *,
+    entity_filter: object,
+    failure_start: datetime | None,
+) -> tuple[int, list[str]]:
+    # Score is additive; keep it simple and explainable.
+    score = 0
+    reasons: list[str] = []
+
+    table = str(alert.get("table_name") or "").lower()
+    message = str(alert.get("message") or "").lower()
+
+    dataset = getattr(entity_filter, "dataset_name", None) if entity_filter is not None else None
+    if isinstance(dataset, str) and dataset:
+        needle = dataset.lower()
+        if needle in table:
+            score += 5
+            reasons.append(f"dataset match: '{dataset}' in table_name")
+
+    config_path = getattr(entity_filter, "config_path", None) if entity_filter is not None else None
+    if isinstance(config_path, str) and config_path:
+        # Use the filename stem as a weak keyword signal.
+        stem = config_path.rsplit("/", 1)[-1].rsplit(".", 1)[0].lower()
+        if stem and (stem in table or stem in message):
+            score += 2
+            reasons.append(f"config keyword match: '{stem}'")
+
+    created_at = _parse_dt(alert.get("created_at"))
+    if created_at is not None and failure_start is not None:
+        delta = abs((created_at - failure_start).total_seconds())
+        if delta <= 3600:
+            score += 3
+            reasons.append("within 1h of failure")
+        elif delta <= 6 * 3600:
+            score += 1
+            reasons.append("within 6h of failure")
+
+    if score == 0:
+        reasons.append("weak match (recency only)")
+
+    return score, reasons
+
+
 def execute_plan(plan: PlanResult) -> ExecutionResult:
     if plan.action == "analyze_pipeline_failure":
         failures = get_failed_ingestion_runs(
@@ -92,15 +167,33 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
                 ),
             )
 
+        derived_time_filter = plan.time_filter or _derive_time_filter_from_failure(failures)
+        failure_start = _parse_dt(failures[0].get("start_time"))
+
         dq = get_recent_dq_alerts(
-            time_filter=plan.time_filter,
+            time_filter=derived_time_filter,
             entity_filter=plan.entity_filter,
-            limit=25,
+            limit=100,
         )
 
         dq_alerts: list[dict] = dq
         if _is_error_result(dq):
             dq_alerts = []
+        else:
+            scored: list[dict] = []
+            for alert in dq_alerts:
+                score, reasons = _score_alert(
+                    alert,
+                    entity_filter=plan.entity_filter,
+                    failure_start=failure_start,
+                )
+                enriched = dict(alert)
+                enriched["_score"] = score
+                enriched["_reasons"] = reasons
+                scored.append(enriched)
+
+            scored.sort(key=lambda a: int(a.get("_score", 0)), reverse=True)
+            dq_alerts = scored[:10]
 
         return ExecutionResult(
             status="success",
@@ -108,7 +201,7 @@ def execute_plan(plan: PlanResult) -> ExecutionResult:
             output=format_root_cause_report(
                 failures=failures,
                 dq_alerts=dq_alerts,
-                time_filter=plan.time_filter,
+                time_filter=derived_time_filter,
                 entity_filter=plan.entity_filter,
             ),
         )

@@ -49,11 +49,16 @@ def format_root_cause_report(
 
     if dq_alerts and not (isinstance(dq_alerts[0], dict) and "error" in dq_alerts[0]):
         lines.append("")
-        lines.append("Related data quality alerts (heuristic match):")
+        lines.append("Related data quality alerts (ranked heuristic match):")
         for i, alert in enumerate(dq_alerts[:10], 1):
+            score = alert.get("_score")
+            reasons = alert.get("_reasons") or []
+            reason_text = ""
+            if isinstance(reasons, list) and reasons:
+                reason_text = " (" + "; ".join(str(r) for r in reasons[:3]) + ")"
             lines.append(
-                f"{i}. [{alert.get('severity')}] {alert.get('rule_name')} on "
-                f"{alert.get('table_name')} at {alert.get('created_at')}: {alert.get('message')}"
+                f"{i}. score={score} [{alert.get('severity')}] {alert.get('rule_name')} on "
+                f"{alert.get('table_name')} at {alert.get('created_at')}: {alert.get('message')}{reason_text}"
             )
     else:
         lines.append("")
