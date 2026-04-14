@@ -39,6 +39,12 @@ def get_failed_ingestion_runs(
         """
         params.append(f"%{entity_filter.config_path}%")
 
+    if entity_filter is not None and entity_filter.pipeline_name is not None:
+        base_query += """
+            AND config_path ILIKE ?
+        """
+        params.append(f"%{entity_filter.pipeline_name}%")
+
     base_query += """
         ORDER BY start_time DESC
         LIMIT ?
@@ -91,6 +97,12 @@ def get_recent_ingestion_runs(
             AND config_path ILIKE ?
         """
         params.append(f"%{entity_filter.config_path}%")
+
+    if entity_filter is not None and entity_filter.pipeline_name is not None:
+        base_query += """
+            AND config_path ILIKE ?
+        """
+        params.append(f"%{entity_filter.pipeline_name}%")
 
     base_query += """
         ORDER BY start_time DESC

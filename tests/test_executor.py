@@ -3,7 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from app.executor import execute_plan
-from app.schemas import ActionType, PlanResult
+from app.schemas import ActionType, EntityFilter, PlanResult
 
 
 def _plan(action: ActionType) -> PlanResult:
@@ -101,3 +101,38 @@ def test_analyze_pipeline_failure_links_failure_and_dq(mock_dq: object, mock_fai
     assert "latest failed run" in out
     assert "related data quality alerts" in out
     assert "score=" in out
+
+
+@patch("app.executor.get_failed_ingestion_runs")
+@patch("app.executor.get_recent_dq_alerts")
+def test_analyze_pipeline_failure_scores_pipeline_keyword(mock_dq: object, mock_failures: object) -> None:
+    mock_failures.return_value = [
+        {
+            "run_id": "r3",
+            "status": "failed",
+            "start_time": "2026-04-14T00:00:00",
+            "end_time": None,
+            "rows_loaded": 0,
+            "config_path": "configs/orders_pipeline.yaml",
+        }
+    ]
+    mock_dq.return_value = [
+        {
+            "created_at": "2026-04-14T00:05:00",
+            "severity": "high",
+            "rule_name": "not_null",
+            "table_name": "orders_raw",
+            "message": "nulls detected",
+        }
+    ]
+
+    plan = PlanResult(
+        intent="pipeline_failure_lookup",
+        action="analyze_pipeline_failure",
+        message="test",
+        entity_filter=EntityFilter(pipeline_name="orders"),
+    )
+
+    result = execute_plan(plan)
+    assert result.status == "success"
+    assert "pipeline match" in result.output.lower()

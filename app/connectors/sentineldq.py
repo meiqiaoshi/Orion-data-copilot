@@ -41,6 +41,15 @@ def get_recent_dq_alerts(
                 if needle in str(row["table_name"]).lower()
             ]
 
+        if entity_filter is not None and entity_filter.pipeline_name is not None:
+            needle = entity_filter.pipeline_name.lower()
+            results = [
+                row
+                for row in results
+                if needle in str(row["table_name"]).lower()
+                or needle in str(row["message"]).lower()
+            ]
+
         return results
 
     except Exception as exc:

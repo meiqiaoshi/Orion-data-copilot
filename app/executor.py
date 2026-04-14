@@ -116,6 +116,13 @@ def _score_alert(
             score += 5
             reasons.append(f"dataset match: '{dataset}' in table_name")
 
+    pipeline = getattr(entity_filter, "pipeline_name", None) if entity_filter is not None else None
+    if isinstance(pipeline, str) and pipeline:
+        needle = pipeline.lower()
+        if needle in table or needle in message:
+            score += 4
+            reasons.append(f"pipeline match: '{pipeline}' in table_name/message")
+
     config_path = getattr(entity_filter, "config_path", None) if entity_filter is not None else None
     if isinstance(config_path, str) and config_path:
         # Use the filename stem as a weak keyword signal.

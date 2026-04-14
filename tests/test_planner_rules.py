@@ -15,6 +15,14 @@ def test_why_failed_maps_to_root_cause_analysis() -> None:
     plan = plan_query(UserQuery("Why did pipeline X fail yesterday?"), use_llm=False)
     assert plan.intent == "pipeline_failure_lookup"
     assert plan.action == "analyze_pipeline_failure"
+    assert plan.entity_filter is not None
+    assert plan.entity_filter.pipeline_name == "X"
+
+
+def test_pipeline_name_extracted_for_failure_queries() -> None:
+    plan = plan_query(UserQuery("Show failed jobs for pipeline orders"), use_llm=False)
+    assert plan.entity_filter is not None
+    assert plan.entity_filter.pipeline_name == "orders"
 
 
 def test_recent_runs_maps_to_recent_ingestion() -> None:

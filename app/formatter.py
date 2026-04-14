@@ -17,6 +17,8 @@ def _build_filter_text(
     if entity_filter is not None:
         if entity_filter.config_path is not None:
             filters.append(f"config '{entity_filter.config_path}'")
+        if entity_filter.pipeline_name is not None:
+            filters.append(f"pipeline '{entity_filter.pipeline_name}'")
         if entity_filter.dataset_name is not None:
             filters.append(f"dataset '{entity_filter.dataset_name}'")
 
