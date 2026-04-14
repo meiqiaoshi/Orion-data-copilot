@@ -48,6 +48,16 @@ def format_root_cause_report(
         f"- latest failed run: {latest.get('run_id')} at {latest.get('start_time')} "
         f"(rows_loaded={latest.get('rows_loaded')})"
     )
+    cfg = latest.get("config_path")
+    if cfg:
+        lines.append(f"- config_path: {cfg}")
+
+    if time_filter is not None:
+        lines.append("")
+        lines.append(
+            f"DQ alert lookup window: {time_filter.start_time} -> {time_filter.end_time} "
+            f"({time_filter.label})"
+        )
 
     if dq_alerts and not (isinstance(dq_alerts[0], dict) and "error" in dq_alerts[0]):
         lines.append("")
