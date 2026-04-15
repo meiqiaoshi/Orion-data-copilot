@@ -1,12 +1,25 @@
 from __future__ import annotations
 
+import argparse
+
 from app.executor import execute_plan
 from app.planner import plan_query
 from app.schemas import UserQuery
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Orion Data Copilot CLI")
+    parser.add_argument(
+        "--no-llm",
+        action="store_true",
+        help="Use the rule-based planner only (skip OpenAI even if configured).",
+    )
+    args = parser.parse_args()
+    use_llm = not args.no_llm
+
     print("Orion Data Copilot")
+    if not use_llm:
+        print("(Rule-based planner only — LLM disabled.)")
     print("Type 'exit' to quit.\n")
 
     while True:
@@ -20,7 +33,7 @@ def main() -> None:
             break
 
         query = UserQuery(raw_text=user_input)
-        plan = plan_query(query)
+        plan = plan_query(query, use_llm=use_llm)
         execution = execute_plan(plan)
 
         print("\n--- Plan ---")

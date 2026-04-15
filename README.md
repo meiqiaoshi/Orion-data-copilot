@@ -59,6 +59,8 @@ From the repository root:
 python main.py
 ```
 
+Use `python main.py --no-llm` to force the **English keyword rule planner** only (no OpenAI), which matches local tests with `use_llm=False`.
+
 Type natural language questions at the `Query>` prompt. Use `exit` or `quit` to leave.
 
 ## Project layout
