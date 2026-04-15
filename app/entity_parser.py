@@ -17,8 +17,9 @@ def parse_pipeline_name(text: str) -> str | None:
     patterns = [
         r"\bpipeline\s*[=:]\s*([a-zA-Z0-9_\-]+)",
         r"\bpipeline\s+([a-zA-Z0-9_\-]+)\b",
-        r"\b管道\s*[=:：]\s*([a-zA-Z0-9_\-]+)",
-        r"\b管道\s+([a-zA-Z0-9_\-]+)",
+        r"管道\s*[=:：]\s*([a-zA-Z0-9_\-]+)",
+        r"管道\s+([a-zA-Z0-9_\-]+)",
+        r"管道([a-zA-Z0-9_\-]+)",
     ]
     for pat in patterns:
         match = re.search(pat, text, re.IGNORECASE)
@@ -31,8 +32,9 @@ def parse_dataset_name(text: str) -> str | None:
     patterns = [
         r"\bdataset\s*[=:]\s*([a-zA-Z0-9_\-]+)",
         r"\bdataset\s+([a-zA-Z0-9_\-]+)\b",
-        r"\b数据集\s*[=:：]\s*([a-zA-Z0-9_\-]+)",
-        r"\b数据集\s+([a-zA-Z0-9_\-]+)",
+        r"数据集\s*[=:：]\s*([a-zA-Z0-9_\-]+)",
+        r"数据集\s+([a-zA-Z0-9_\-]+)",
+        r"数据集([a-zA-Z0-9_\-]+)",
     ]
     for pat in patterns:
         match = re.search(pat, text, re.IGNORECASE)

@@ -60,3 +60,9 @@ def test_chinese_data_quality() -> None:
     plan = plan_query(UserQuery("数据质量告警"), use_llm=False)
     assert plan.intent == "data_quality_lookup"
     assert plan.action == "query_sentineldq_issues"
+
+
+def test_chinese_pipeline_name_tight() -> None:
+    plan = plan_query(UserQuery("管道p2最近运行失败"), use_llm=False)
+    assert plan.entity_filter is not None
+    assert plan.entity_filter.pipeline_name == "p2"

@@ -16,7 +16,7 @@ Planning produces a **fixed set of intents** wired to connector queries; it does
 
 ## Status (vs. earlier roadmap)
 
-**Shipped in this repo:** Interactive **CLI**; **hybrid** planner (OpenAI + rules); execution paths for **failed / recent IngestFlow runs** (DuckDB) and **SentinelDQ alerts** (when the package is available); **heuristic root-cause style** summaries that combine failed runs with **ranked** DQ matches (time window + scoring); basic **formatting** of those results.
+**Shipped in this repo:** Interactive **CLI**; **hybrid** planner (OpenAI + rules); rule-based hints for common **English and Chinese** phrasing (failures, recent runs, DQ); execution paths for **failed / recent IngestFlow runs** (DuckDB) and **SentinelDQ alerts** (when the package is available); **heuristic root-cause style** summaries that combine failed runs with **ranked** DQ matches (time window + scoring); basic **formatting** of those results.
 
 **Still future work** (see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — *Future Directions*): open-ended **NL → SQL**, **web UI**, **multi-step** reasoning, and **stronger** causal diagnosis than heuristic matching. The old README listed some of these as “planned”; not all are implemented yet.
 
