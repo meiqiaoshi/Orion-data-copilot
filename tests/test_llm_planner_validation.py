@@ -12,7 +12,10 @@ def test_parse_plan_json_safe_rejects_non_object_payload() -> None:
 
 
 def test_parse_plan_json_safe_rejects_invalid_intent_action() -> None:
-    bad_intent = '{"intent":"nope","action":"query_ingestion_runs","message":"x","time_filter":null,"entity_filter":null}'
+    bad_intent = (
+        '{"intent":"nope","action":"query_ingestion_runs","message":"x",'
+        '"time_filter":null,"entity_filter":null}'
+    )
     assert parse_plan_json_safe(bad_intent) is None
 
     bad_action = '{"intent":"unknown","action":"do_stuff","message":"x","time_filter":null,"entity_filter":null}'

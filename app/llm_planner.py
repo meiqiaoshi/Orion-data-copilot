@@ -12,7 +12,91 @@ except ImportError:  # pragma: no cover
     OpenAI = None  # type: ignore
 
 
-SYSTEM_PROMPT = """
+def _plan_json_compact(payload: dict[str, Any]) -> str:
+    return json.dumps(payload, separators=(",", ":"))
+
+
+def _build_system_prompt() -> str:
+    examples = [
+        (
+            "User: Show failed ingestion jobs in the last 7 days for sample.yaml\nOutput:\n"
+            + _plan_json_compact(
+                {
+                    "intent": "pipeline_failure_lookup",
+                    "action": "query_ingestion_runs",
+                    "message": "Inspect failed ingestion runs.",
+                    "time_filter": {
+                        "label": "last_7_days",
+                        "start_time": "2026-04-08T00:00:00",
+                        "end_time": "2026-04-15T00:00:00",
+                    },
+                    "entity_filter": {
+                        "config_path": "sample.yaml",
+                        "pipeline_name": None,
+                        "dataset_name": None,
+                    },
+                }
+            )
+        ),
+        (
+            "User: Why did pipeline orders fail yesterday?\nOutput:\n"
+            + _plan_json_compact(
+                {
+                    "intent": "pipeline_failure_lookup",
+                    "action": "analyze_pipeline_failure",
+                    "message": "Analyze likely causes by linking failures to DQ alerts.",
+                    "time_filter": {
+                        "label": "yesterday",
+                        "start_time": "2026-04-14T00:00:00",
+                        "end_time": "2026-04-15T00:00:00",
+                    },
+                    "entity_filter": {
+                        "config_path": None,
+                        "pipeline_name": "orders",
+                        "dataset_name": None,
+                    },
+                }
+            )
+        ),
+        (
+            "User: Show recent ingestion runs for pipeline orders\nOutput:\n"
+            + _plan_json_compact(
+                {
+                    "intent": "pipeline_run_lookup",
+                    "action": "query_recent_ingestion_runs",
+                    "message": "Inspect recent ingestion runs.",
+                    "time_filter": None,
+                    "entity_filter": {
+                        "config_path": None,
+                        "pipeline_name": "orders",
+                        "dataset_name": None,
+                    },
+                }
+            )
+        ),
+        (
+            "User: Any data quality alerts for dataset raw_orders today?\nOutput:\n"
+            + _plan_json_compact(
+                {
+                    "intent": "data_quality_lookup",
+                    "action": "query_sentineldq_issues",
+                    "message": "Inspect recent data quality alerts.",
+                    "time_filter": {
+                        "label": "today",
+                        "start_time": "2026-04-15T00:00:00",
+                        "end_time": "2026-04-15T12:00:00",
+                    },
+                    "entity_filter": {
+                        "config_path": None,
+                        "pipeline_name": None,
+                        "dataset_name": "raw_orders",
+                    },
+                }
+            )
+        ),
+    ]
+
+    body = """
 You are a query planning assistant for a data platform copilot.
 
 Your job is to convert a user's natural language query into a structured JSON plan.
@@ -65,22 +149,14 @@ Guidelines:
 
 Examples (return JSON only):
 
-User: Show failed ingestion jobs in the last 7 days for sample.yaml
-Output:
-{"intent":"pipeline_failure_lookup","action":"query_ingestion_runs","message":"Inspect failed ingestion runs.","time_filter":{"label":"last_7_days","start_time":"2026-04-08T00:00:00","end_time":"2026-04-15T00:00:00"},"entity_filter":{"config_path":"sample.yaml","pipeline_name":null,"dataset_name":null}}
+""" + "\n\n".join(
+        examples
+    )
 
-User: Why did pipeline orders fail yesterday?
-Output:
-{"intent":"pipeline_failure_lookup","action":"analyze_pipeline_failure","message":"Analyze likely causes by linking failures to DQ alerts.","time_filter":{"label":"yesterday","start_time":"2026-04-14T00:00:00","end_time":"2026-04-15T00:00:00"},"entity_filter":{"config_path":null,"pipeline_name":"orders","dataset_name":null}}
+    return body.strip()
 
-User: Show recent ingestion runs for pipeline orders
-Output:
-{"intent":"pipeline_run_lookup","action":"query_recent_ingestion_runs","message":"Inspect recent ingestion runs.","time_filter":null,"entity_filter":{"config_path":null,"pipeline_name":"orders","dataset_name":null}}
 
-User: Any data quality alerts for dataset raw_orders today?
-Output:
-{"intent":"data_quality_lookup","action":"query_sentineldq_issues","message":"Inspect recent data quality alerts.","time_filter":{"label":"today","start_time":"2026-04-15T00:00:00","end_time":"2026-04-15T12:00:00"},"entity_filter":{"config_path":null,"pipeline_name":null,"dataset_name":"raw_orders"}}
-""".strip()
+SYSTEM_PROMPT = _build_system_prompt()
 
 
 _ALLOWED_INTENTS = {

@@ -12,7 +12,8 @@ from app.time_parser import parse_time_window
 
 def _plan_query_with_rules(query: UserQuery) -> PlanResult:
     text = query.raw_text.lower()
-    parsed_window = parse_time_window(query.raw_text)
+    raw = query.raw_text
+    parsed_window = parse_time_window(raw)
 
     time_filter = None
     if parsed_window is not None:
@@ -22,9 +23,9 @@ def _plan_query_with_rules(query: UserQuery) -> PlanResult:
             end_time=parsed_window.end_time,
         )
 
-    config_path = parse_config_path(query.raw_text)
-    pipeline_name = parse_pipeline_name(query.raw_text)
-    dataset_name = parse_dataset_name(query.raw_text)
+    config_path = parse_config_path(raw)
+    pipeline_name = parse_pipeline_name(raw)
+    dataset_name = parse_dataset_name(raw)
 
     entity_filter = None
     if any(
@@ -40,8 +41,21 @@ def _plan_query_with_rules(query: UserQuery) -> PlanResult:
             dataset_name=dataset_name,
         )
 
-    if "fail" in text or "failed" in text or "failure" in text:
-        if "why" in text or "root cause" in text or "cause" in text:
+    if (
+        "fail" in text
+        or "failed" in text
+        or "failure" in text
+        or "失败" in raw
+        or "故障" in raw
+    ):
+        if (
+            "why" in text
+            or "root cause" in text
+            or "cause" in text
+            or "为什么" in raw
+            or "为何" in raw
+            or "什么原因" in raw
+        ):
             return PlanResult(
                 intent="pipeline_failure_lookup",
                 action="analyze_pipeline_failure",
@@ -59,8 +73,15 @@ def _plan_query_with_rules(query: UserQuery) -> PlanResult:
             planner_source="rules",
         )
 
-    if "recent" in text or "latest" in text:
-        if "run" in text or "runs" in text or "jobs" in text:
+    if "recent" in text or "latest" in text or "最近" in raw or "最新" in raw:
+        if (
+            "run" in text
+            or "runs" in text
+            or "jobs" in text
+            or "运行" in raw
+            or "作业" in raw
+            or "任务" in raw
+        ):
             return PlanResult(
                 intent="pipeline_run_lookup",
                 action="query_recent_ingestion_runs",
@@ -78,6 +99,8 @@ def _plan_query_with_rules(query: UserQuery) -> PlanResult:
         or "issues" in text
         or "alert" in text
         or "alerts" in text
+        or "数据质量" in raw
+        or "告警" in raw
     ):
         return PlanResult(
             intent="data_quality_lookup",

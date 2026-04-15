@@ -16,6 +16,15 @@ def parse_time_window(text: str) -> TimeWindow | None:
     normalized = text.strip().lower()
     now = datetime.now()
 
+    last_cn = re.search(r"(?:最近|过去)\s*(\d+)\s*天", text)
+    if last_cn:
+        days = int(last_cn.group(1))
+        return TimeWindow(
+            label=f"last_{days}_days",
+            start_time=now - timedelta(days=days),
+            end_time=now,
+        )
+
     last_n_days_match = re.search(r"last\s+(\d+)\s+days?", normalized)
     if last_n_days_match:
         days = int(last_n_days_match.group(1))
@@ -25,7 +34,7 @@ def parse_time_window(text: str) -> TimeWindow | None:
             end_time=now,
         )
 
-    if "yesterday" in normalized:
+    if "昨天" in text or "yesterday" in normalized:
         today_start = datetime(now.year, now.month, now.day)
         yesterday_start = today_start - timedelta(days=1)
         return TimeWindow(
@@ -34,7 +43,7 @@ def parse_time_window(text: str) -> TimeWindow | None:
             end_time=today_start,
         )
 
-    if "today" in normalized:
+    if "今天" in text or "today" in normalized:
         today_start = datetime(now.year, now.month, now.day)
         return TimeWindow(
             label="today",
