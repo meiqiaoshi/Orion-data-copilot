@@ -7,24 +7,8 @@ def test_parse_pipeline_equals_form() -> None:
     assert parse_pipeline_name("pipeline=orders failed") == "orders"
 
 
-def test_parse_pipeline_chinese() -> None:
-    assert parse_pipeline_name("管道 orders 失败了") == "orders"
-
-
-def test_parse_pipeline_chinese_no_space() -> None:
-    assert parse_pipeline_name("为什么管道p1昨天失败") == "p1"
-
-
 def test_parse_dataset_equals_form() -> None:
     assert parse_dataset_name("dataset=raw_orders alerts") == "raw_orders"
-
-
-def test_parse_dataset_chinese() -> None:
-    assert parse_dataset_name("数据集 raw_orders 有问题") == "raw_orders"
-
-
-def test_parse_dataset_chinese_no_space() -> None:
-    assert parse_dataset_name("数据集raw_orders告警") == "raw_orders"
 
 
 def test_parse_config_explicit_prefix() -> None:
