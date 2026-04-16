@@ -59,7 +59,7 @@ From the repository root:
 python main.py
 ```
 
-Use `python main.py --version` to print the CLI version. Use `python main.py --no-llm` to force the **English keyword rule planner** only (no OpenAI), which matches local tests with `use_llm=False`.
+Use `python main.py --version` to print the CLI version (defined in `app/version.py`). Use `python main.py --no-llm` to force the **English keyword rule planner** only (no OpenAI), which matches local tests with `use_llm=False`.
 
 Type natural language questions at the `Query>` prompt. Use `exit` or `quit` to leave.
 
@@ -68,6 +68,7 @@ Type natural language questions at the `Query>` prompt. Use `exit` or `quit` to 
 | Path | Role |
 |------|------|
 | `main.py` | CLI loop: read query → plan → execute → print |
+| `app/version.py` | Single source for `__version__` (used by `--version`) |
 | `app/planner.py` | LLM + rule planning |
 | `app/executor.py` | Dispatch to connectors |
 | `app/connectors/ingestflow.py` | DuckDB queries |
