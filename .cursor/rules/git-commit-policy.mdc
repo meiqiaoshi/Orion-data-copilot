@@ -1,0 +1,14 @@
+---
+description: User commits locally; agent suggests messages only
+alwaysApply: true
+---
+
+# Git commits
+
+Do **not** run `git commit` unless the user explicitly asks you to create/commit for them.
+
+When changes are ready, give **copy-paste** suggestions only, for example:
+
+`git commit -m "feat(scope): short description"`
+
+The user prefers to review diffs and run `git commit` / `git push` themselves.

@@ -17,3 +17,16 @@ def test_main_help_includes_no_llm() -> None:
     )
     assert result.returncode == 0
     assert "--no-llm" in result.stdout
+
+
+def test_main_version() -> None:
+    result = subprocess.run(
+        [sys.executable, str(_ROOT / "main.py"), "--version"],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+    assert result.returncode == 0
+    assert "main.py" in result.stdout
+    assert "0.2.0" in result.stdout

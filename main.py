@@ -6,9 +6,16 @@ from app.executor import execute_plan
 from app.planner import plan_query
 from app.schemas import UserQuery
 
+__version__ = "0.2.0"
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Orion Data Copilot CLI")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
     parser.add_argument(
         "--no-llm",
         action="store_true",
