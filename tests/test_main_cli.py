@@ -20,6 +20,8 @@ def test_main_help_includes_no_llm() -> None:
 
 
 def test_main_version() -> None:
+    from app.version import __version__ as expected
+
     result = subprocess.run(
         [sys.executable, str(_ROOT / "main.py"), "--version"],
         capture_output=True,
@@ -29,4 +31,4 @@ def test_main_version() -> None:
     )
     assert result.returncode == 0
     assert "main.py" in result.stdout
-    assert "0.2.0" in result.stdout
+    assert expected in result.stdout

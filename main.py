@@ -5,8 +5,7 @@ import argparse
 from app.executor import execute_plan
 from app.planner import plan_query
 from app.schemas import UserQuery
-
-__version__ = "0.2.0"
+from app.version import __version__
 
 
 def main() -> None:
