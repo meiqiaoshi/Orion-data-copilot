@@ -45,6 +45,14 @@ ruff check app tests main.py
 pytest
 ```
 
+Optional — run Ruff on `git commit` (same paths as CI):
+
+```bash
+pip install pre-commit   # or: already in requirements-dev.txt
+pre-commit install
+pre-commit run --all-files   # once, to verify hooks
+```
+
 ## Configuration
 
 - **LLM planner**: Set `OPENAI_API_KEY` in your environment. The default model name is configured in `app/llm_planner.py` (`plan_query_with_llm`).
