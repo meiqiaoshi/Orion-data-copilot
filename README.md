@@ -16,9 +16,9 @@ Planning produces a **fixed set of intents** wired to connector queries; it does
 
 ## Status (vs. earlier roadmap)
 
-**Shipped in this repo:** Interactive **CLI**; **hybrid** planner (OpenAI + rules); execution paths for **failed / recent IngestFlow runs** (DuckDB) and **SentinelDQ alerts** (when the package is available); **heuristic root-cause style** summaries that combine failed runs with **ranked** DQ matches (time window + scoring); basic **formatting** of those results.
+**Shipped in this repo:** Interactive **CLI**; optional **Streamlit** browser UI (`scripts/streamlit_app.py`) that reuses the same planner and executor; **hybrid** planner (OpenAI + rules); execution paths for **failed / recent IngestFlow runs** (DuckDB) and **SentinelDQ alerts** (when the package is available); **heuristic root-cause style** summaries that combine failed runs with **ranked** DQ matches (time window + scoring); basic **formatting** of those results.
 
-**Still future work** (see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — *Future Directions*): open-ended **NL → SQL**, **web UI**, **multi-step** reasoning, and **stronger** causal diagnosis than heuristic matching. The old README listed some of these as “planned”; not all are implemented yet.
+**Still future work** (see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — *Future Directions*): open-ended **NL → SQL**, a fuller **product-style** web app, **multi-step** reasoning, and **stronger** causal diagnosis than heuristic matching. The old README listed some of these as “planned”; not all are implemented yet.
 
 ## Requirements
 
@@ -41,7 +41,7 @@ For tests and lint (`pytest`, `ruff`; Ruff settings in `pyproject.toml`):
 
 ```bash
 pip install -r requirements-dev.txt
-ruff check app tests main.py
+ruff check app tests main.py scripts
 pytest
 ```
 
@@ -75,6 +75,22 @@ Use `python main.py --version` to print the CLI version (defined in `app/version
 
 Type natural language questions at the `Query>` prompt. Use `exit` or `quit` to leave.
 
+## Web UI (Streamlit, optional)
+
+Install UI dependencies (adds Streamlit on top of `requirements.txt`):
+
+```bash
+pip install -r requirements-ui.txt
+```
+
+From the repository root:
+
+```bash
+streamlit run scripts/streamlit_app.py
+```
+
+The sidebar toggles **LLM vs rules-only** planning (same behavior as `python main.py --no-llm` when disabled). Recent queries appear in the sidebar for quick reference.
+
 ## Project layout
 
 | Path | Role |
@@ -87,3 +103,4 @@ Type natural language questions at the `Query>` prompt. Use `exit` or `quit` to 
 | `app/connectors/sentineldq.py` | SentinelDQ alerts |
 | `app/llm_planner.py` | OpenAI Responses API → JSON plan |
 | `app/time_parser.py`, `app/entity_parser.py` | Heuristic time/entity extraction for rules |
+| `scripts/streamlit_app.py` | Optional Streamlit UI (plan + execute + formatted output) |

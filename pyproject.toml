@@ -4,3 +4,7 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+# Streamlit entrypoint must extend sys.path before `app` imports.
+[tool.ruff.lint.per-file-ignores]
+"scripts/streamlit_app.py" = ["E402"]

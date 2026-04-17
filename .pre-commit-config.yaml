@@ -3,4 +3,4 @@ repos:
     rev: v0.8.4
     hooks:
       - id: ruff
-        args: [check, app, tests, main.py]
+        args: [check, app, tests, main.py, scripts]
