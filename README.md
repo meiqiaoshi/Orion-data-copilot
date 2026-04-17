@@ -45,6 +45,10 @@ ruff check app tests main.py
 pytest
 ```
 
+Some tests build a **temporary DuckDB** with an `ingestion_runs` schema (see `tests/test_ingestflow_integration.py`); they do not use your real `warehouse.duckdb`.
+
+On GitHub, the **CI** workflow can also be triggered manually (**Actions → CI → Run workflow**) because `workflow_dispatch` is enabled.
+
 Optional — run Ruff on `git commit` (same paths as CI):
 
 ```bash
