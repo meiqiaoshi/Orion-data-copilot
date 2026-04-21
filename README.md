@@ -56,6 +56,17 @@ ruff check app tests main.py scripts
 pytest
 ```
 
+Shortcuts (same shell must use your project Python, e.g. conda env `dev`):
+
+```bash
+make install-dev   # same as pip install -e ".[dev,api]"
+make lint
+make test
+# make api         # uvicorn app.api:app (install [api] first)
+```
+
+See [`CHANGELOG.md`](CHANGELOG.md) for a coarse history of shipped features.
+
 GitHub **CI** uses `pip install -e ".[dev,api]"` so every run checks packaging, the **`orion-copilot`** entry point, and the **HTTP API** test suite (FastAPI + Uvicorn).
 
 Some tests build a **temporary DuckDB** with an `ingestion_runs` schema (see `tests/test_ingestflow_integration.py`); they do not use your real `warehouse.duckdb`.
@@ -128,6 +139,8 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 
 | Path | Role |
 |------|------|
+| `Makefile` | Optional: `make lint`, `make test`, `make install-dev`, `make api` |
+| `CHANGELOG.md` | High-level feature history |
 | `pyproject.toml` | Build / package metadata; Ruff settings; `orion-copilot` console script |
 | `main.py` | CLI loop: read query → plan → execute → print |
 | `app/version.py` | Single source for `__version__` (used by `--version`) |
