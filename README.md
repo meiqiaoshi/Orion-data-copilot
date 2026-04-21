@@ -49,10 +49,13 @@ orion-copilot --version
 For tests and lint (`pytest`, `ruff`; Ruff settings in `pyproject.toml`):
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
+# or: pip install -r requirements-dev.txt
 ruff check app tests main.py scripts
 pytest
 ```
+
+GitHub **CI** uses `pip install -e ".[dev]"` so every run checks that the editable package and **`orion-copilot`** entry point install correctly.
 
 Some tests build a **temporary DuckDB** with an `ingestion_runs` schema (see `tests/test_ingestflow_integration.py`); they do not use your real `warehouse.duckdb`.
 
