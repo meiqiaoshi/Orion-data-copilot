@@ -1,3 +1,41 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orion-data-copilot"
+description = "Natural-language queries against pipeline metadata (IngestFlow, SentinelDQ)."
+readme = "README.md"
+requires-python = ">=3.10"
+dynamic = ["version"]
+dependencies = [
+    "duckdb>=1.0.0",
+    "openai>=1.0.0",
+]
+
+[project.optional-dependencies]
+ui = [
+    "streamlit>=1.28.0",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.8.0",
+    "pre-commit>=3.5.0",
+]
+
+[project.scripts]
+orion-copilot = "main:main"
+
+[tool.setuptools]
+py-modules = ["main"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "app.version.__version__" }
+
 [tool.ruff]
 target-version = "py310"
 line-length = 120

@@ -37,6 +37,15 @@ pip install -r requirements.txt
 # pip install sentineldq   # if you have the package and want DQ queries
 ```
 
+Editable install from the repo root exposes the **`orion-copilot`** CLI (same as `python main.py`; version comes from `app/version.py`):
+
+```bash
+pip install -e .
+orion-copilot --version
+# pip install -e ".[ui]"    # optional: Streamlit (same pins as requirements-ui.txt)
+# pip install -e ".[dev]"   # optional: pytest, ruff, pre-commit
+```
+
 For tests and lint (`pytest`, `ruff`; Ruff settings in `pyproject.toml`):
 
 ```bash
@@ -95,6 +104,7 @@ The sidebar toggles **LLM vs rules-only** planning (same behavior as `python mai
 
 | Path | Role |
 |------|------|
+| `pyproject.toml` | Build / package metadata; Ruff settings; `orion-copilot` console script |
 | `main.py` | CLI loop: read query → plan → execute → print |
 | `app/version.py` | Single source for `__version__` (used by `--version`) |
 | `app/planner.py` | LLM + rule planning |
