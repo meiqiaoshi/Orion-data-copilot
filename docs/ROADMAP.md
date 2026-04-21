@@ -36,8 +36,11 @@
 ## Phase 3 (Future)
 
 ### Web UI
-- Chat interface
-- Query history
+**Shipped (baseline):** optional Streamlit app (`scripts/streamlit_app.py`), `requirements-ui.txt`; sidebar LLM toggle and recent-query history.
+
+**Next:**
+- Chat-style layout and richer session UX if we outgrow the prototype
+- Persistence / sharing of runs (beyond Streamlit session state)
 
 ### Advanced Reasoning
 - Multi-step queries

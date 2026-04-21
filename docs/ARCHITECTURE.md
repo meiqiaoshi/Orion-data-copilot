@@ -49,8 +49,8 @@ Formatter (AI-style response)
 ## 🔍 Component Breakdown
 
 ### Query Interface
-- CLI-based input (main.py)
-- Entry point of the system
+- **CLI** (`main.py`): interactive prompt; flags such as `--no-llm` and `--version`
+- **Optional Streamlit UI** (`scripts/streamlit_app.py`): same planner and executor as the CLI; install via `requirements-ui.txt`
 
 ### Planner Layer
 - LLM Planner (OpenAI)
@@ -105,10 +105,14 @@ Flow:
 
 ## 🚀 Future Directions
 
-- Root cause analysis
-- LLM SQL generation
-- Web UI
-- Multi-step reasoning
+**Already in the repo (beyond the original MVP sketch):**
+- Heuristic **root-cause style** reporting (`analyze_pipeline_failure`): failed IngestFlow runs plus ranked SentinelDQ alerts (time window, scoring)
+- Baseline **Streamlit** UI for ad-hoc queries (not a full product portal)
+
+**Still ahead:**
+- Open-ended **NL → SQL** against arbitrary schemas (not fixed connector intents)
+- **Richer** web experience (auth, saved contexts, collaboration) beyond the Streamlit prototype
+- **Multi-step** reasoning and stronger causal diagnosis than keyword/time heuristics
 
 ---
 
