@@ -51,7 +51,7 @@ Formatter (AI-style response)
 ### Query Interface
 - **CLI** (`main.py`): interactive prompt; flags such as `--no-llm` and `--version`
 - **Optional Streamlit UI** (`scripts/streamlit_app.py`): same planner and executor as the CLI; install via `requirements-ui.txt`
-- **Optional HTTP API** (`app/api.py`, FastAPI + Uvicorn): `POST /v1/query` returns JSON plan and execution; OpenAPI at `/docs`; install via `requirements-api.txt` or `pip install -e ".[api]"`
+- **Optional HTTP API** (`app/api.py`, FastAPI + Uvicorn): `POST /v1/query` returns JSON plan and execution; OpenAPI at `/docs`; optional shared secret `ORION_API_KEY` via `app/api_auth.py`; install via `requirements-api.txt` or `pip install -e ".[api]"`
 
 ### Planner Layer
 - LLM Planner (OpenAI)

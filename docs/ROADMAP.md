@@ -36,9 +36,9 @@
 ## Phase 3 (Future)
 
 ### HTTP API
-**Shipped (baseline):** FastAPI app (`app/api.py`): `POST /v1/query`, `GET /health`, `GET /v1/version`; OpenAPI `/docs`; permissive CORS for development. Dependencies: `requirements-api.txt` / `pip install -e ".[api]"`.
+**Shipped (baseline):** FastAPI app (`app/api.py`): `POST /v1/query`, `GET /health`, `GET /v1/version`; OpenAPI `/docs`; permissive CORS for development. Optional shared secret via **`ORION_API_KEY`** (`app/api_auth.py`). Dependencies: `requirements-api.txt` / `pip install -e ".[api]"`.
 
-**Next:** authentication, rate limits, and deployment notes for production.
+**Next:** rate limits, richer auth (OAuth / mTLS), and deployment hardening.
 
 ### Web UI
 **Shipped (baseline):** optional Streamlit app (`scripts/streamlit_app.py`), `requirements-ui.txt`; sidebar LLM toggle and recent-query history.

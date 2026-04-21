@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
+from app.api_auth import verify_api_key_if_configured
 from app.executor import execute_plan
 from app.json_serialization import execution_result_to_dict, plan_result_to_dict
 from app.planner import plan_query
@@ -53,12 +54,15 @@ def health() -> dict[str, str]:
 
 
 @app.get("/v1/version")
-def version_info() -> dict[str, str]:
+def version_info(_: None = Depends(verify_api_key_if_configured)) -> dict[str, str]:
     return {"version": __version__}
 
 
 @app.post("/v1/query", response_model=QueryResponse)
-def run_query(req: QueryRequest) -> QueryResponse:
+def run_query(
+    req: QueryRequest,
+    _: None = Depends(verify_api_key_if_configured),
+) -> QueryResponse:
     uq = UserQuery(raw_text=req.query)
     plan = plan_query(uq, use_llm=req.use_llm)
     execution = execute_plan(plan)

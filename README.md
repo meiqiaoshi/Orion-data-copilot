@@ -120,7 +120,8 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
 - **POST `/v1/query`** — JSON body `{"query": "<natural language>", "use_llm": true}` → JSON with `plan` and `execution` (same structure as the Streamlit JSON panels; datetimes as ISO strings).
-- **GET `/health`**, **GET `/v1/version`**, **GET `/`** — liveness and metadata.
+- **GET `/health`**, **GET `/v1/version`**, **GET `/`** — liveness and metadata (`/health` and `/` stay unauthenticated even when an API key is configured).
+- **Optional auth:** set **`ORION_API_KEY`** in the environment. When set, **`/v1/query`** and **`/v1/version`** require header **`X-API-Key: <key>`** or **`Authorization: Bearer <key>`**. Omit the variable for local development (no key required).
 - **CORS** is open (`allow_origins=["*"]`) for local and tooling; tighten behind a reverse proxy in production.
 
 ## Project layout
@@ -138,5 +139,6 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 | `app/time_parser.py`, `app/entity_parser.py` | Heuristic time/entity extraction for rules |
 | `app/json_serialization.py` | Plan/execution → JSON-safe dicts (API, Streamlit) |
 | `app/api.py` | Optional FastAPI app (`uvicorn app.api:app`) |
+| `app/api_auth.py` | Optional `ORION_API_KEY` check for `/v1/*` |
 | `scripts/streamlit_app.py` | Optional Streamlit UI (plan + execute + formatted output) |
 | `requirements-api.txt` | FastAPI + Uvicorn for the HTTP API |
