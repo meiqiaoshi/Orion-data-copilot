@@ -35,6 +35,11 @@
 
 ## Phase 3 (Future)
 
+### HTTP API
+**Shipped (baseline):** FastAPI app (`app/api.py`): `POST /v1/query`, `GET /health`, `GET /v1/version`; OpenAPI `/docs`; permissive CORS for development. Dependencies: `requirements-api.txt` / `pip install -e ".[api]"`.
+
+**Next:** authentication, rate limits, and deployment notes for production.
+
 ### Web UI
 **Shipped (baseline):** optional Streamlit app (`scripts/streamlit_app.py`), `requirements-ui.txt`; sidebar LLM toggle and recent-query history.
 

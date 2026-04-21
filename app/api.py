@@ -1,0 +1,79 @@
+"""HTTP API (FastAPI) — same planner and executor as the CLI and Streamlit UI."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field, field_validator
+
+from app.executor import execute_plan
+from app.json_serialization import execution_result_to_dict, plan_result_to_dict
+from app.planner import plan_query
+from app.schemas import UserQuery
+from app.version import __version__
+
+app = FastAPI(
+    title="Orion Data Copilot",
+    description="Natural-language queries against pipeline metadata (IngestFlow, SentinelDQ).",
+    version=__version__,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+class QueryRequest(BaseModel):
+    query: str = Field(..., max_length=32000)
+    use_llm: bool = True
+
+    @field_validator("query")
+    @classmethod
+    def strip_nonempty(cls, v: str) -> str:
+        s = v.strip()
+        if not s:
+            raise ValueError("query must not be empty")
+        return s
+
+
+class QueryResponse(BaseModel):
+    plan: dict[str, Any]
+    execution: dict[str, Any]
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.get("/v1/version")
+def version_info() -> dict[str, str]:
+    return {"version": __version__}
+
+
+@app.post("/v1/query", response_model=QueryResponse)
+def run_query(req: QueryRequest) -> QueryResponse:
+    uq = UserQuery(raw_text=req.query)
+    plan = plan_query(uq, use_llm=req.use_llm)
+    execution = execute_plan(plan)
+    return QueryResponse(
+        plan=plan_result_to_dict(plan),
+        execution=execution_result_to_dict(execution),
+    )
+
+
+@app.get("/")
+def root() -> dict[str, str]:
+    return {
+        "service": "orion-data-copilot",
+        "version": __version__,
+        "docs": "/docs",
+        "health": "/health",
+        "query": "POST /v1/query",
+    }

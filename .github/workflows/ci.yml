@@ -29,7 +29,7 @@ jobs:
             pyproject.toml
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,api]"
 
       - name: Verify console script
         run: orion-copilot --version

@@ -1,5 +1,5 @@
 # Same pins as pyproject.toml [project] + optional-dependencies.dev.
-# CI installs with: pip install -e ".[dev]"
+# For API stack in CI, use: pip install -e ".[dev,api]" (see requirements-api.txt / [api] extra).
 -r requirements.txt
 pytest>=8.0
 ruff>=0.8.0

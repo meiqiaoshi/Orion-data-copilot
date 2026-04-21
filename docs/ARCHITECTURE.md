@@ -51,6 +51,7 @@ Formatter (AI-style response)
 ### Query Interface
 - **CLI** (`main.py`): interactive prompt; flags such as `--no-llm` and `--version`
 - **Optional Streamlit UI** (`scripts/streamlit_app.py`): same planner and executor as the CLI; install via `requirements-ui.txt`
+- **Optional HTTP API** (`app/api.py`, FastAPI + Uvicorn): `POST /v1/query` returns JSON plan and execution; OpenAPI at `/docs`; install via `requirements-api.txt` or `pip install -e ".[api]"`
 
 ### Planner Layer
 - LLM Planner (OpenAI)
@@ -108,6 +109,7 @@ Flow:
 **Already in the repo (beyond the original MVP sketch):**
 - Heuristic **root-cause style** reporting (`analyze_pipeline_failure`): failed IngestFlow runs plus ranked SentinelDQ alerts (time window, scoring)
 - Baseline **Streamlit** UI for ad-hoc queries (not a full product portal)
+- Baseline **HTTP API** (FastAPI) for programmatic access and integrations (`POST /v1/query`, OpenAPI `/docs`)
 
 **Still ahead:**
 - Open-ended **NL → SQL** against arbitrary schemas (not fixed connector intents)

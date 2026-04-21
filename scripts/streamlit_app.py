@@ -9,10 +9,7 @@ Run from the repository root:
 from __future__ import annotations
 
 import sys
-from dataclasses import asdict
-from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 # Ensure `import app.*` works when launched via `streamlit run scripts/...`
 _ROOT = Path(__file__).resolve().parents[1]
@@ -22,32 +19,15 @@ if str(_ROOT) not in sys.path:
 import streamlit as st
 
 from app.executor import execute_plan
+from app.json_serialization import execution_result_to_dict, plan_result_to_dict
 from app.planner import plan_query
-from app.schemas import ExecutionResult, PlanResult, UserQuery
+from app.schemas import UserQuery
 from app.version import __version__
 
 
 def _init_history() -> None:
     if "history" not in st.session_state:
         st.session_state.history = []
-
-
-def _json_safe(value: Any) -> Any:
-    if isinstance(value, dict):
-        return {k: _json_safe(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_json_safe(v) for v in value]
-    if isinstance(value, datetime):
-        return value.isoformat()
-    return value
-
-
-def _serialize_plan(plan: PlanResult) -> dict[str, Any]:
-    return _json_safe(asdict(plan))
-
-
-def _serialize_execution(ex: ExecutionResult) -> dict[str, Any]:
-    return _json_safe(asdict(ex))
 
 
 def main() -> None:
@@ -89,10 +69,10 @@ def main() -> None:
         c1, c2 = st.columns(2)
         with c1:
             st.subheader("Plan")
-            st.json(_serialize_plan(plan))
+            st.json(plan_result_to_dict(plan))
         with c2:
             st.subheader("Execution")
-            st.json(_serialize_execution(execution))
+            st.json(execution_result_to_dict(execution))
 
         st.subheader("Output")
         st.markdown(execution.output)

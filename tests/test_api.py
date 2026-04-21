@@ -1,0 +1,58 @@
+from __future__ import annotations
+
+import pytest
+
+pytest.importorskip("fastapi")
+
+from fastapi.testclient import TestClient
+
+from app.api import app
+from app.version import __version__
+
+
+@pytest.fixture
+def client() -> TestClient:
+    return TestClient(app)
+
+
+def test_root_lists_entrypoints(client: TestClient) -> None:
+    r = client.get("/")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["service"] == "orion-data-copilot"
+    assert body["version"] == __version__
+    assert body["docs"] == "/docs"
+
+
+def test_health(client: TestClient) -> None:
+    r = client.get("/health")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+
+
+def test_v1_version(client: TestClient) -> None:
+    r = client.get("/v1/version")
+    assert r.status_code == 200
+    assert r.json() == {"version": __version__}
+
+
+def test_openapi_docs_available(client: TestClient) -> None:
+    r = client.get("/docs")
+    assert r.status_code == 200
+
+
+def test_query_rules_only(client: TestClient) -> None:
+    r = client.post(
+        "/v1/query",
+        json={"query": "what is the weather", "use_llm": False},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert "plan" in body and "execution" in body
+    assert body["plan"]["intent"] == "unknown"
+    assert "status" in body["execution"]
+
+
+def test_query_rejects_whitespace_only(client: TestClient) -> None:
+    r = client.post("/v1/query", json={"query": "   ", "use_llm": False})
+    assert r.status_code == 422
