@@ -45,6 +45,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate Compose file
+        run: docker compose config -q
+
       - name: Build API Docker image
         run: docker build -t orion-data-copilot:ci .
 

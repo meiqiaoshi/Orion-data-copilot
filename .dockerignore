@@ -9,6 +9,7 @@ tests
 scripts
 docs
 Makefile
+docker-compose.yml
 CHANGELOG.md
 .pre-commit-config.yaml
 pytest.ini

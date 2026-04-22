@@ -64,11 +64,12 @@ make lint
 make test
 # make api           # uvicorn app.api:app (install [api] first)
 # make docker-build  # needs Docker; then make docker-run
+# make compose-up    # docker compose up --build (see docker-compose.yml)
 ```
 
 See [`CHANGELOG.md`](CHANGELOG.md) for a coarse history of shipped features.
 
-GitHub **CI** uses `pip install -e ".[dev,api]"` so every run checks packaging, the **`orion-copilot`** entry point, and the **HTTP API** test suite (FastAPI + Uvicorn). A second job **builds the Docker image** and hits **`/health`** in a short-lived container.
+GitHub **CI** uses `pip install -e ".[dev,api]"` so every run checks packaging, the **`orion-copilot`** entry point, and the **HTTP API** test suite (FastAPI + Uvicorn). A second job **validates `docker compose`**, **builds the Docker image**, and hits **`/health`** in a short-lived container.
 
 Some tests build a **temporary DuckDB** with an `ingestion_runs` schema (see `tests/test_ingestflow_integration.py`); they do not use your real `warehouse.duckdb`.
 
@@ -87,6 +88,7 @@ pre-commit run --all-files   # once, to verify hooks
 - **LLM planner**: Set `OPENAI_API_KEY` in your environment. The default model name is configured in `app/llm_planner.py` (`plan_query_with_llm`).
 - **IngestFlow / DuckDB**: Connectors default to `warehouse.duckdb` in the current working directory. Ensure that file exists and contains an `ingestion_runs` table (e.g. from running [IngestFlow](https://github.com/meiqiaoshi/Ingestflow) pipelines).
 - **SentinelDQ**: Must be importable and configured as expected by `sentineldq.metadata.store.get_recent_alerts` for DQ queries to succeed.
+- **HTTP API / Compose**: Optional shared secret **`ORION_API_KEY`** (see HTTP API section). For `docker compose`, copy [`.env.example`](.env.example) to `.env` if you want keys loaded from a file.
 
 ## Run
 
@@ -151,13 +153,23 @@ docker run --rm -p 8000:8000 \
 
 Working directory in the container is `/app`, which matches the default DuckDB path `warehouse.duckdb`. Mount your real metadata file as shown (or rely on images that already ship a DB). Omit `ORION_API_KEY` if you want an open `/v1` surface inside a trusted network only.
 
+**Compose (optional):** copy [`.env.example`](.env.example) to `.env` and adjust keys, ensure `./warehouse.duckdb` exists (or comment out the `volumes` block in [`docker-compose.yml`](docker-compose.yml)), then:
+
+```bash
+docker compose up --build
+```
+
+Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY` and `ORION_API_KEY` from your shell or from a root `.env` file used for interpolation.
+
 ## Project layout
 
 | Path | Role |
 |------|------|
 | `Dockerfile` | Container image for the FastAPI API (`uvicorn` on port 8000) |
+| `docker-compose.yml` | Local `docker compose up` for the API + DuckDB mount |
+| `.env.example` | Template for `OPENAI_API_KEY` / `ORION_API_KEY` (copy to `.env`) |
 | `.dockerignore` | Keeps `docker build` context small |
-| `Makefile` | Optional: `make lint`, `make test`, `make install-dev`, `make api`, `docker-build` / `docker-run` |
+| `Makefile` | Optional: `make lint`, `make test`, `make install-dev`, `make api`, `docker-build` / `docker-run` / `compose-up` |
 | `CHANGELOG.md` | High-level feature history |
 | `pyproject.toml` | Build / package metadata; Ruff settings; `orion-copilot` console script |
 | `main.py` | CLI loop: read query → plan → execute → print |

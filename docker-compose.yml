@@ -1,0 +1,14 @@
+# Local HTTP API: build from Dockerfile, mount DuckDB from host.
+# Optional: create `.env` from `.env.example` — Compose reads it for variable substitution.
+services:
+  api:
+    build: .
+    image: orion-data-copilot:local
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ORION_API_KEY: ${ORION_API_KEY:-}
+    volumes:
+      # Comment out if you do not have warehouse.duckdb yet (Docker may create a directory otherwise).
+      - ./warehouse.duckdb:/app/warehouse.duckdb:ro
