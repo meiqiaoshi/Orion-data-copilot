@@ -14,6 +14,7 @@ All notable changes to this project are documented here. The format is loosely i
 - `Makefile` for common local commands (`lint`, `test`, `install-dev`, `api`).
 - `Dockerfile` + `.dockerignore` for running the HTTP API in a container.
 - `docker-compose.yml` and `.env.example` for local API + DuckDB mount.
+- **`ORION_DUCKDB_PATH`** env var (via `app/config.py`) to point IngestFlow at any DuckDB file; Compose sets a container default.
 
 ### Changed
 

@@ -74,3 +74,13 @@ def test_get_failed_respects_time_filter(duckdb_path: str) -> None:
     rows = get_failed_ingestion_runs(db_path=duckdb_path, time_filter=tf, limit=10)
     assert len(rows) == 1
     assert rows[0]["run_id"] == "r-fail"
+
+
+def test_orion_duckdb_path_env_used_when_db_path_omitted(
+    duckdb_path: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ORION_DUCKDB_PATH", duckdb_path)
+    rows = get_failed_ingestion_runs(limit=10)
+    assert len(rows) == 1
+    assert rows[0]["run_id"] == "r-fail"

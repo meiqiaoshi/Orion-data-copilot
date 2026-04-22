@@ -24,7 +24,7 @@ Planning produces a **fixed set of intents** wired to connector queries; it does
 
 - **Python 3.10+** recommended (code uses modern typing; project has been used with 3.9+).
 - Dependencies used by the app:
-  - **duckdb** — query `warehouse.duckdb` (IngestFlow run history).
+  - **duckdb** — query IngestFlow run history (default file `warehouse.duckdb`, or path from **`ORION_DUCKDB_PATH`**).
   - **openai** — optional; enables the LLM planner. Without it, only the rule planner runs.
   - **sentineldq** — optional; required for data-quality queries (`query_sentineldq_issues`).
 
@@ -86,7 +86,7 @@ pre-commit run --all-files   # once, to verify hooks
 ## Configuration
 
 - **LLM planner**: Set `OPENAI_API_KEY` in your environment. The default model name is configured in `app/llm_planner.py` (`plan_query_with_llm`).
-- **IngestFlow / DuckDB**: Connectors default to `warehouse.duckdb` in the current working directory. Ensure that file exists and contains an `ingestion_runs` table (e.g. from running [IngestFlow](https://github.com/meiqiaoshi/Ingestflow) pipelines).
+- **IngestFlow / DuckDB**: Default file is `warehouse.duckdb` in the current working directory. Override with **`ORION_DUCKDB_PATH`** (absolute or relative path) for containers or non-default layouts. The file must exist and contain an `ingestion_runs` table (e.g. from running [IngestFlow](https://github.com/meiqiaoshi/Ingestflow) pipelines).
 - **SentinelDQ**: Must be importable and configured as expected by `sentineldq.metadata.store.get_recent_alerts` for DQ queries to succeed.
 - **HTTP API / Compose**: Optional shared secret **`ORION_API_KEY`** (see HTTP API section). For `docker compose`, copy [`.env.example`](.env.example) to `.env` if you want keys loaded from a file.
 
@@ -159,7 +159,7 @@ Working directory in the container is `/app`, which matches the default DuckDB p
 docker compose up --build
 ```
 
-Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY` and `ORION_API_KEY` from your shell or from a root `.env` file used for interpolation.
+Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, `ORION_API_KEY`, and **`ORION_DUCKDB_PATH`** (default **`/app/warehouse.duckdb`** in the file, matching the volume mount) from your shell or a root `.env` used for interpolation.
 
 ## Project layout
 
@@ -176,6 +176,7 @@ Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY` and `ORION_
 | `app/version.py` | Single source for `__version__` (used by `--version`) |
 | `app/planner.py` | LLM + rule planning |
 | `app/executor.py` | Dispatch to connectors |
+| `app/config.py` | e.g. `ORION_DUCKDB_PATH` resolution for IngestFlow |
 | `app/connectors/ingestflow.py` | DuckDB queries |
 | `app/connectors/sentineldq.py` | SentinelDQ alerts |
 | `app/llm_planner.py` | OpenAI Responses API → JSON plan |

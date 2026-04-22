@@ -62,7 +62,7 @@ Formatter (AI-style response)
 - Routes queries to connectors
 
 ### Connectors
-- IngestFlow (DuckDB)
+- IngestFlow (DuckDB; default `warehouse.duckdb`, override with env **`ORION_DUCKDB_PATH`**)
 - SentinelDQ (Python package `sentineldq`; alerts via `get_recent_alerts`, typically backed by a local SQLite metadata DB)
 
 ### Formatter Layer

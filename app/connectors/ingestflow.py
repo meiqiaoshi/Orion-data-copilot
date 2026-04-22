@@ -4,11 +4,12 @@ from typing import Any
 
 import duckdb
 
+from app.config import resolve_duckdb_path
 from app.schemas import EntityFilter, TimeFilter
 
 
 def get_failed_ingestion_runs(
-    db_path: str = "warehouse.duckdb",
+    db_path: str | None = None,
     time_filter: TimeFilter | None = None,
     entity_filter: EntityFilter | None = None,
     limit: int = 10,
@@ -52,9 +53,10 @@ def get_failed_ingestion_runs(
     """
     params.append(limit)
 
+    path = resolve_duckdb_path(db_path)
     con = None
     try:
-        con = duckdb.connect(db_path)
+        con = duckdb.connect(path)
         result = con.execute(base_query, params)
         rows = result.fetchall()
         columns = [desc[0] for desc in result.description]
@@ -67,7 +69,7 @@ def get_failed_ingestion_runs(
 
 
 def get_recent_ingestion_runs(
-    db_path: str = "warehouse.duckdb",
+    db_path: str | None = None,
     time_filter: TimeFilter | None = None,
     entity_filter: EntityFilter | None = None,
     limit: int = 10,
@@ -111,9 +113,10 @@ def get_recent_ingestion_runs(
     """
     params.append(limit)
 
+    path = resolve_duckdb_path(db_path)
     con = None
     try:
-        con = duckdb.connect(db_path)
+        con = duckdb.connect(path)
         result = con.execute(base_query, params)
         rows = result.fetchall()
         columns = [desc[0] for desc in result.description]
