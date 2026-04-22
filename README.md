@@ -16,7 +16,7 @@ Planning produces a **fixed set of intents** wired to connector queries; it does
 
 ## Status (vs. earlier roadmap)
 
-**Shipped in this repo:** Interactive **CLI**; optional **Streamlit** UI and optional **HTTP API** (FastAPI in `app/api.py`) — both call the same planner and executor as the CLI; **hybrid** planner (OpenAI + rules); execution paths for **failed / recent IngestFlow runs** (DuckDB) and **SentinelDQ alerts** (when the package is available); **heuristic root-cause style** summaries that combine failed runs with **ranked** DQ matches (time window + scoring); basic **formatting** of those results.
+**Shipped in this repo:** Interactive **CLI**; optional **Streamlit** UI and optional **HTTP API** (FastAPI in `app/api.py`) — **`POST /v1/query`** runs the same hybrid planner (OpenAI + rules) and connectors as the CLI; **`POST /v1/plan`** returns a plan JSON only (no connector calls); execution paths for **failed / recent IngestFlow runs** (DuckDB) and **SentinelDQ alerts** (when the package is available); **heuristic root-cause style** summaries that combine failed runs with **ranked** DQ matches (time window + scoring); basic **formatting** of those results.
 
 **Still future work** (see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — *Future Directions*): open-ended **NL → SQL**, a fuller **product-style** web app, **multi-step** reasoning, and **stronger** causal diagnosis than heuristic matching. The old README listed some of these as “planned”; not all are implemented yet.
 
@@ -133,9 +133,10 @@ Run from the repository root (auto-generated OpenAPI UI at **http://127.0.0.1:80
 uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
+- **POST `/v1/plan`** — same JSON body as below; returns **`plan` only** (no connector calls — useful for previews and avoiding DuckDB/SentinelDQ work).
 - **POST `/v1/query`** — JSON body `{"query": "<natural language>", "use_llm": true}` → JSON with `plan` and `execution` (same structure as the Streamlit JSON panels; datetimes as ISO strings).
 - **GET `/health`**, **GET `/v1/version`**, **GET `/`** — liveness and metadata (`/health` and `/` stay unauthenticated even when an API key is configured).
-- **Optional auth:** set **`ORION_API_KEY`** in the environment. When set, **`/v1/query`** and **`/v1/version`** require header **`X-API-Key: <key>`** or **`Authorization: Bearer <key>`**. Omit the variable for local development (no key required).
+- **Optional auth:** set **`ORION_API_KEY`** in the environment. When set, **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`** require header **`X-API-Key: <key>`** or **`Authorization: Bearer <key>`**. Omit the variable for local development (no key required).
 - **CORS** is open (`allow_origins=["*"]`) for local and tooling; tighten behind a reverse proxy in production.
 
 ### Docker (HTTP API image)

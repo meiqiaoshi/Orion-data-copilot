@@ -48,6 +48,10 @@ class QueryResponse(BaseModel):
     execution: dict[str, Any]
 
 
+class PlanResponse(BaseModel):
+    plan: dict[str, Any]
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -56,6 +60,17 @@ def health() -> dict[str, str]:
 @app.get("/v1/version")
 def version_info(_: None = Depends(verify_api_key_if_configured)) -> dict[str, str]:
     return {"version": __version__}
+
+
+@app.post("/v1/plan", response_model=PlanResponse)
+def plan_only(
+    req: QueryRequest,
+    _: None = Depends(verify_api_key_if_configured),
+) -> PlanResponse:
+    """Plan only (no connector execution)."""
+    uq = UserQuery(raw_text=req.query)
+    plan = plan_query(uq, use_llm=req.use_llm)
+    return PlanResponse(plan=plan_result_to_dict(plan))
 
 
 @app.post("/v1/query", response_model=QueryResponse)
@@ -79,5 +94,6 @@ def root() -> dict[str, str]:
         "version": __version__,
         "docs": "/docs",
         "health": "/health",
+        "plan": "POST /v1/plan",
         "query": "POST /v1/query",
     }

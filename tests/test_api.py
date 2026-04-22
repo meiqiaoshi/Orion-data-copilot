@@ -22,6 +22,7 @@ def test_root_lists_entrypoints(client: TestClient) -> None:
     assert body["service"] == "orion-data-copilot"
     assert body["version"] == __version__
     assert body["docs"] == "/docs"
+    assert body["plan"] == "POST /v1/plan"
 
 
 def test_health(client: TestClient) -> None:
@@ -53,8 +54,24 @@ def test_query_rules_only(client: TestClient) -> None:
     assert "status" in body["execution"]
 
 
+def test_plan_rules_only_no_execution(client: TestClient) -> None:
+    r = client.post(
+        "/v1/plan",
+        json={"query": "what is the weather", "use_llm": False},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body.keys()) == {"plan"}
+    assert body["plan"]["intent"] == "unknown"
+
+
 def test_query_rejects_whitespace_only(client: TestClient) -> None:
     r = client.post("/v1/query", json={"query": "   ", "use_llm": False})
+    assert r.status_code == 422
+
+
+def test_plan_rejects_whitespace_only(client: TestClient) -> None:
+    r = client.post("/v1/plan", json={"query": "   ", "use_llm": False})
     assert r.status_code == 422
 
 
@@ -73,6 +90,12 @@ def test_v1_routes_require_api_key_when_configured(
     )
     assert q.status_code == 401
 
+    p = client.post(
+        "/v1/plan",
+        json={"query": "what is the weather", "use_llm": False},
+    )
+    assert p.status_code == 401
+
     v_ok = client.get("/v1/version", headers={"X-API-Key": "test-secret-key"})
     assert v_ok.status_code == 200
 
@@ -82,6 +105,13 @@ def test_v1_routes_require_api_key_when_configured(
         headers={"Authorization": "Bearer test-secret-key"},
     )
     assert q_ok.status_code == 200
+
+    p_ok = client.post(
+        "/v1/plan",
+        json={"query": "what is the weather", "use_llm": False},
+        headers={"X-API-Key": "test-secret-key"},
+    )
+    assert p_ok.status_code == 200
 
 
 def test_health_unauthenticated_when_api_key_configured(

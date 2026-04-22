@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format is loosely i
 
 ### Added
 
-- FastAPI HTTP API (`app/api.py`): `POST /v1/query`, health/version routes, OpenAPI at `/docs`.
+- FastAPI HTTP API (`app/api.py`): `POST /v1/plan` (plan only), `POST /v1/query`, health/version routes, OpenAPI at `/docs`.
 - Optional API protection via `ORION_API_KEY` (`app/api_auth.py`).
 - Optional Streamlit UI (`scripts/streamlit_app.py`) and `requirements-ui.txt`.
 - PEP 621 packaging: `pip install -e .`, `orion-copilot` CLI, optional extras `[ui]`, `[api]`, `[dev]`.
