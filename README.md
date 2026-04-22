@@ -138,6 +138,7 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 - **GET `/health`**, **GET `/v1/version`**, **GET `/`** — liveness and metadata (`/health` and `/` stay unauthenticated even when an API key is configured).
 - **Optional auth:** set **`ORION_API_KEY`** in the environment. When set, **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`** require header **`X-API-Key: <key>`** or **`Authorization: Bearer <key>`**. Omit the variable for local development (no key required).
 - **CORS** is open (`allow_origins=["*"]`) for local and tooling; tighten behind a reverse proxy in production.
+- **Tracing:** every response includes **`X-Request-ID`** (UUID unless the client sends a non-empty **`X-Request-ID`** header, which is echoed back). Listed in **`Access-Control-Expose-Headers`** for browser clients.
 
 ### Docker (HTTP API image)
 
@@ -185,5 +186,6 @@ Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, `ORION_API
 | `app/json_serialization.py` | Plan/execution → JSON-safe dicts (API, Streamlit) |
 | `app/api.py` | Optional FastAPI app (`uvicorn app.api:app`) |
 | `app/api_auth.py` | Optional `ORION_API_KEY` check for `/v1/*` |
+| `app/api_middleware.py` | `X-Request-ID` middleware |
 | `scripts/streamlit_app.py` | Optional Streamlit UI (plan + execute + formatted output) |
 | `requirements-api.txt` | FastAPI + Uvicorn for the HTTP API |

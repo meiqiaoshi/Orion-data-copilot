@@ -92,6 +92,7 @@ Flow:
 
 - Tracks planner source (llm vs rules)
 - Enables debugging and evaluation
+- HTTP API: **`X-Request-ID`** on every response (see `app/api_middleware.py`)
 
 ---
 

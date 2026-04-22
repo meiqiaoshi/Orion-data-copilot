@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 import pytest
 
 pytest.importorskip("fastapi")
@@ -29,6 +31,16 @@ def test_health(client: TestClient) -> None:
     r = client.get("/health")
     assert r.status_code == 200
     assert r.json() == {"status": "ok"}
+    rid = r.headers.get("x-request-id")
+    assert rid
+    uuid.UUID(rid)
+
+
+def test_request_id_echoed_when_client_sends_header(client: TestClient) -> None:
+    custom = "trace-abc-123"
+    r = client.get("/health", headers={"X-Request-ID": custom})
+    assert r.status_code == 200
+    assert r.headers.get("x-request-id") == custom
 
 
 def test_v1_version(client: TestClient) -> None:
