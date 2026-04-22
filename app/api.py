@@ -101,3 +101,46 @@ def root() -> dict[str, str]:
         "plan": "POST /v1/plan",
         "query": "POST /v1/query",
     }
+
+
+_OPENAPI_AUTH_BLURB = (
+    "\n\n### Authentication\n"
+    "When the server sets **`ORION_API_KEY`**, send **`X-API-Key`** or **`Authorization: Bearer "
+    "<key>`** on **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`**. "
+    "If that variable is unset, those routes stay open (development default)."
+)
+
+
+def custom_openapi() -> dict[str, Any]:
+    from fastapi.openapi.utils import get_openapi
+
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=str(app.version),
+        openapi_version=app.openapi_version,
+        description=(app.description or "") + _OPENAPI_AUTH_BLURB,
+        routes=app.routes,
+    )
+    openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {}).update(
+        {
+            "ApiKeyHeader": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-API-Key",
+                "description": "Matches `ORION_API_KEY` when enabled on the server.",
+            },
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "description": "Alternative to X-API-Key when `ORION_API_KEY` is enabled.",
+            },
+        }
+    )
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi  # type: ignore[method-assign]

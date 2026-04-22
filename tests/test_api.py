@@ -54,6 +54,16 @@ def test_openapi_docs_available(client: TestClient) -> None:
     assert r.status_code == 200
 
 
+def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> None:
+    r = client.get("/openapi.json")
+    assert r.status_code == 200
+    schemes = r.json()["components"]["securitySchemes"]
+    assert schemes["ApiKeyHeader"]["type"] == "apiKey"
+    assert schemes["ApiKeyHeader"]["name"] == "X-API-Key"
+    assert schemes["BearerAuth"]["scheme"] == "bearer"
+    assert "Authentication" in r.json()["info"]["description"]
+
+
 def test_query_rules_only(client: TestClient) -> None:
     r = client.post(
         "/v1/query",
