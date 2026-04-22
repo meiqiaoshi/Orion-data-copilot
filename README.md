@@ -86,7 +86,7 @@ pre-commit run --all-files   # once, to verify hooks
 ## Configuration
 
 - **LLM planner**: Set `OPENAI_API_KEY` in your environment. The default model name is configured in `app/llm_planner.py` (`plan_query_with_llm`).
-- **IngestFlow / DuckDB**: Default file is `warehouse.duckdb` in the current working directory. Override with **`ORION_DUCKDB_PATH`** (absolute or relative path) for containers or non-default layouts. The file must exist and contain an `ingestion_runs` table (e.g. from running [IngestFlow](https://github.com/meiqiaoshi/Ingestflow) pipelines).
+- **IngestFlow / DuckDB**: Default file is `warehouse.duckdb` in the current working directory. Override with **`ORION_DUCKDB_PATH`** (absolute or relative path) for containers or non-default layouts, or pass **`--duckdb PATH`** on the CLI for one session. The file must exist and contain an `ingestion_runs` table (e.g. from running [IngestFlow](https://github.com/meiqiaoshi/Ingestflow) pipelines).
 - **SentinelDQ**: Must be importable and configured as expected by `sentineldq.metadata.store.get_recent_alerts` for DQ queries to succeed.
 - **HTTP API / Compose**: Optional shared secret **`ORION_API_KEY`** (see HTTP API section). For `docker compose`, copy [`.env.example`](.env.example) to `.env` if you want keys loaded from a file.
 
@@ -98,7 +98,7 @@ From the repository root:
 python main.py
 ```
 
-Use `python main.py --version` to print the CLI version (defined in `app/version.py`). Use `python main.py --no-llm` to force the **English keyword rule planner** only (no OpenAI), which matches local tests with `use_llm=False`.
+Use `python main.py --version` to print the CLI version (defined in `app/version.py`). Use `python main.py --no-llm` to force the **English keyword rule planner** only (no OpenAI), which matches local tests with `use_llm=False`. Use **`python main.py --duckdb /path/to/warehouse.duckdb`** to set **`ORION_DUCKDB_PATH`** for this process (same as the env var; `orion-copilot` supports it too).
 
 Type natural language questions at the `Query>` prompt. Use `exit` or `quit` to leave.
 

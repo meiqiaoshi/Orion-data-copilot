@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 
 from app.executor import execute_plan
 from app.planner import plan_query
@@ -20,7 +21,15 @@ def main() -> None:
         action="store_true",
         help="Use the rule-based planner only (skip OpenAI even if configured).",
     )
+    parser.add_argument(
+        "--duckdb",
+        metavar="PATH",
+        default=None,
+        help="Path to IngestFlow DuckDB (sets ORION_DUCKDB_PATH for this process).",
+    )
     args = parser.parse_args()
+    if args.duckdb is not None and args.duckdb.strip():
+        os.environ["ORION_DUCKDB_PATH"] = args.duckdb.strip()
     use_llm = not args.no_llm
 
     print("Orion Data Copilot")

@@ -17,6 +17,7 @@ def test_main_help_includes_no_llm() -> None:
     )
     assert result.returncode == 0
     assert "--no-llm" in result.stdout
+    assert "--duckdb" in result.stdout
 
 
 def test_main_version() -> None:

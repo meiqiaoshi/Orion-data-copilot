@@ -15,6 +15,7 @@ All notable changes to this project are documented here. The format is loosely i
 - `Dockerfile` + `.dockerignore` for running the HTTP API in a container.
 - `docker-compose.yml` and `.env.example` for local API + DuckDB mount.
 - **`ORION_DUCKDB_PATH`** env var (via `app/config.py`) to point IngestFlow at any DuckDB file; Compose sets a container default.
+- CLI **`--duckdb PATH`** on `main.py` / `orion-copilot` (sets `ORION_DUCKDB_PATH` for the session).
 
 ### Changed
 
