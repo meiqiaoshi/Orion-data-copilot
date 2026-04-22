@@ -16,6 +16,7 @@ All notable changes to this project are documented here. The format is loosely i
 - `docker-compose.yml` and `.env.example` for local API + DuckDB mount.
 - **`ORION_DUCKDB_PATH`** env var (via `app/config.py`) to point IngestFlow at any DuckDB file; Compose sets a container default.
 - CLI **`--duckdb PATH`** on `main.py` / `orion-copilot` (sets `ORION_DUCKDB_PATH` for the session).
+- **`ORION_OPENAI_MODEL`** env var (default `gpt-5`) for the LLM planner (`app/config.py` + `plan_query_with_llm`).
 
 ### Changed
 

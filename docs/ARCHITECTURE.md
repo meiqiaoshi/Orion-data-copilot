@@ -54,7 +54,7 @@ Formatter (AI-style response)
 - **Optional HTTP API** (`app/api.py`, FastAPI + Uvicorn): `POST /v1/plan` (plan JSON only), `POST /v1/query` (plan + execution); OpenAPI at `/docs`; optional shared secret `ORION_API_KEY` via `app/api_auth.py`; install via `requirements-api.txt` or `pip install -e ".[api]"`
 
 ### Planner Layer
-- LLM Planner (OpenAI)
+- LLM Planner (OpenAI; model from **`ORION_OPENAI_MODEL`** or default `gpt-5`)
 - Rule-based fallback
 - Outputs structured plan
 

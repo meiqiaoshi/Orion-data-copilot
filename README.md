@@ -85,7 +85,7 @@ pre-commit run --all-files   # once, to verify hooks
 
 ## Configuration
 
-- **LLM planner**: Set `OPENAI_API_KEY` in your environment. The default model name is configured in `app/llm_planner.py` (`plan_query_with_llm`).
+- **LLM planner**: Set `OPENAI_API_KEY` in your environment. Default model is **`gpt-5`**; override with **`ORION_OPENAI_MODEL`** (see `app/config.py` / `plan_query_with_llm`).
 - **IngestFlow / DuckDB**: Default file is `warehouse.duckdb` in the current working directory. Override with **`ORION_DUCKDB_PATH`** (absolute or relative path) for containers or non-default layouts, or pass **`--duckdb PATH`** on the CLI for one session. The file must exist and contain an `ingestion_runs` table (e.g. from running [IngestFlow](https://github.com/meiqiaoshi/Ingestflow) pipelines).
 - **SentinelDQ**: Must be importable and configured as expected by `sentineldq.metadata.store.get_recent_alerts` for DQ queries to succeed.
 - **HTTP API / Compose**: Optional shared secret **`ORION_API_KEY`** (see HTTP API section). For `docker compose`, copy [`.env.example`](.env.example) to `.env` if you want keys loaded from a file.
@@ -161,7 +161,7 @@ Working directory in the container is `/app`, which matches the default DuckDB p
 docker compose up --build
 ```
 
-Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, `ORION_API_KEY`, and **`ORION_DUCKDB_PATH`** (default **`/app/warehouse.duckdb`** in the file, matching the volume mount) from your shell or a root `.env` used for interpolation.
+Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, optional **`ORION_OPENAI_MODEL`**, `ORION_API_KEY`, and **`ORION_DUCKDB_PATH`** (default **`/app/warehouse.duckdb`** in the file, matching the volume mount) from your shell or a root `.env` used for interpolation.
 
 ## Project layout
 
@@ -169,7 +169,7 @@ Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, `ORION_API
 |------|------|
 | `Dockerfile` | Container image for the FastAPI API (`uvicorn` on port 8000) |
 | `docker-compose.yml` | Local `docker compose up` for the API + DuckDB mount |
-| `.env.example` | Template for `OPENAI_API_KEY` / `ORION_API_KEY` (copy to `.env`) |
+| `.env.example` | Template for API keys and optional `ORION_*` settings (copy to `.env`) |
 | `.dockerignore` | Keeps `docker build` context small |
 | `Makefile` | Optional: `make lint`, `make test`, `make install-dev`, `make api`, `docker-build` / `docker-run` / `compose-up` |
 | `CHANGELOG.md` | High-level feature history |
@@ -178,7 +178,7 @@ Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, `ORION_API
 | `app/version.py` | Single source for `__version__` (used by `--version`) |
 | `app/planner.py` | LLM + rule planning |
 | `app/executor.py` | Dispatch to connectors |
-| `app/config.py` | e.g. `ORION_DUCKDB_PATH` resolution for IngestFlow |
+| `app/config.py` | `ORION_DUCKDB_PATH`, `ORION_OPENAI_MODEL`, and related defaults |
 | `app/connectors/ingestflow.py` | DuckDB queries |
 | `app/connectors/sentineldq.py` | SentinelDQ alerts |
 | `app/llm_planner.py` | OpenAI Responses API → JSON plan |

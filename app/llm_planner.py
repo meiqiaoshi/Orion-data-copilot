@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Any
 
+from app.config import resolve_openai_model
 from app.schemas import EntityFilter, PlanResult, TimeFilter, UserQuery
 
 try:
@@ -295,16 +296,17 @@ def parse_plan_json_safe(raw_json: str) -> PlanResult | None:
 
 def plan_query_with_llm(
     query: UserQuery,
-    model: str = "gpt-5",
+    model: str | None = None,
 ) -> PlanResult | None:
     if OpenAI is None:
         return None
 
     try:
         client = OpenAI()
+        model_name = resolve_openai_model(model)
 
         response = client.responses.create(
-            model=model,
+            model=model_name,
             input=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": query.raw_text},

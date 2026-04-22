@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.config import resolve_duckdb_path
+from app.config import resolve_duckdb_path, resolve_openai_model
 
 
 def test_resolve_explicit_wins_over_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -23,3 +23,18 @@ def test_resolve_default_when_empty(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_resolve_explicit_empty_string_falls_through(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORION_DUCKDB_PATH", "/from/env.duckdb")
     assert resolve_duckdb_path("   ") == "/from/env.duckdb"
+
+
+def test_resolve_openai_model_explicit_wins(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORION_OPENAI_MODEL", "gpt-4o-mini")
+    assert resolve_openai_model("gpt-4o") == "gpt-4o"
+
+
+def test_resolve_openai_model_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORION_OPENAI_MODEL", "gpt-4o-mini")
+    assert resolve_openai_model(None) == "gpt-4o-mini"
+
+
+def test_resolve_openai_model_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ORION_OPENAI_MODEL", raising=False)
+    assert resolve_openai_model(None) == "gpt-5"

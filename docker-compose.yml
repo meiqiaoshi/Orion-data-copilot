@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ORION_OPENAI_MODEL: ${ORION_OPENAI_MODEL:-}
       ORION_API_KEY: ${ORION_API_KEY:-}
       ORION_DUCKDB_PATH: ${ORION_DUCKDB_PATH:-/app/warehouse.duckdb}
     volumes:
