@@ -39,3 +39,18 @@ jobs:
 
       - name: Run tests
         run: pytest -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build API Docker image
+        run: docker build -t orion-data-copilot:ci .
+
+      - name: Smoke test (container /health)
+        run: |
+          set -eux
+          docker run -d --name odc -p 8765:8000 orion-data-copilot:ci
+          curl -sf --retry 30 --retry-delay 1 --retry-connrefused http://127.0.0.1:8765/health
+          docker rm -f odc

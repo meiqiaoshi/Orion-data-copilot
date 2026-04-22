@@ -17,3 +17,4 @@ All notable changes to this project are documented here. The format is loosely i
 ### Changed
 
 - CI installs with `pip install -e ".[dev,api]"` and verifies `orion-copilot --version`.
+- CI runs a **Docker** job that builds the API image and curls `/health` inside a container.

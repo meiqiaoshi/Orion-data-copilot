@@ -68,7 +68,7 @@ make test
 
 See [`CHANGELOG.md`](CHANGELOG.md) for a coarse history of shipped features.
 
-GitHub **CI** uses `pip install -e ".[dev,api]"` so every run checks packaging, the **`orion-copilot`** entry point, and the **HTTP API** test suite (FastAPI + Uvicorn).
+GitHub **CI** uses `pip install -e ".[dev,api]"` so every run checks packaging, the **`orion-copilot`** entry point, and the **HTTP API** test suite (FastAPI + Uvicorn). A second job **builds the Docker image** and hits **`/health`** in a short-lived container.
 
 Some tests build a **temporary DuckDB** with an `ingestion_runs` schema (see `tests/test_ingestflow_integration.py`); they do not use your real `warehouse.duckdb`.
 
