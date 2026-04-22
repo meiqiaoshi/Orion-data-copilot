@@ -62,7 +62,8 @@ Shortcuts (same shell must use your project Python, e.g. conda env `dev`):
 make install-dev   # same as pip install -e ".[dev,api]"
 make lint
 make test
-# make api         # uvicorn app.api:app (install [api] first)
+# make api           # uvicorn app.api:app (install [api] first)
+# make docker-build  # needs Docker; then make docker-run
 ```
 
 See [`CHANGELOG.md`](CHANGELOG.md) for a coarse history of shipped features.
@@ -135,11 +136,28 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 - **Optional auth:** set **`ORION_API_KEY`** in the environment. When set, **`/v1/query`** and **`/v1/version`** require header **`X-API-Key: <key>`** or **`Authorization: Bearer <key>`**. Omit the variable for local development (no key required).
 - **CORS** is open (`allow_origins=["*"]`) for local and tooling; tighten behind a reverse proxy in production.
 
+### Docker (HTTP API image)
+
+From the repository root:
+
+```bash
+docker build -t orion-data-copilot .
+docker run --rm -p 8000:8000 \
+  -e OPENAI_API_KEY=... \
+  -e ORION_API_KEY=... \
+  -v /path/on/host/warehouse.duckdb:/app/warehouse.duckdb \
+  orion-data-copilot
+```
+
+Working directory in the container is `/app`, which matches the default DuckDB path `warehouse.duckdb`. Mount your real metadata file as shown (or rely on images that already ship a DB). Omit `ORION_API_KEY` if you want an open `/v1` surface inside a trusted network only.
+
 ## Project layout
 
 | Path | Role |
 |------|------|
-| `Makefile` | Optional: `make lint`, `make test`, `make install-dev`, `make api` |
+| `Dockerfile` | Container image for the FastAPI API (`uvicorn` on port 8000) |
+| `.dockerignore` | Keeps `docker build` context small |
+| `Makefile` | Optional: `make lint`, `make test`, `make install-dev`, `make api`, `docker-build` / `docker-run` |
 | `CHANGELOG.md` | High-level feature history |
 | `pyproject.toml` | Build / package metadata; Ruff settings; `orion-copilot` console script |
 | `main.py` | CLI loop: read query → plan → execute → print |

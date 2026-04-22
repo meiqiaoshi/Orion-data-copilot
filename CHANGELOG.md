@@ -12,6 +12,7 @@ All notable changes to this project are documented here. The format is loosely i
 - PEP 621 packaging: `pip install -e .`, `orion-copilot` CLI, optional extras `[ui]`, `[api]`, `[dev]`.
 - Shared JSON helpers for plan/execution (`app/json_serialization.py`).
 - `Makefile` for common local commands (`lint`, `test`, `install-dev`, `api`).
+- `Dockerfile` + `.dockerignore` for running the HTTP API in a container.
 
 ### Changed
 
