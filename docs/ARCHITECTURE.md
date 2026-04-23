@@ -92,7 +92,7 @@ Flow:
 
 - Tracks planner source (llm vs rules)
 - Enables debugging and evaluation
-- HTTP API: **`X-Request-ID`** on every response (see `app/api_middleware.py`)
+- HTTP API: **`X-Request-ID`** on every response; **`orion.api.access`** access logs (see `app/api_middleware.py`, env `ORION_API_ACCESS_LOG`)
 
 ---
 

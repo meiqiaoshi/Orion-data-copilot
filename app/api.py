@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 
 from app.api_auth import verify_api_key_if_configured
-from app.api_middleware import REQUEST_ID_HEADER, RequestIdMiddleware
+from app.api_middleware import REQUEST_ID_HEADER, AccessLogMiddleware, RequestIdMiddleware
 from app.executor import execute_plan
 from app.json_serialization import execution_result_to_dict, plan_result_to_dict
 from app.planner import plan_query
@@ -32,6 +32,7 @@ app.add_middleware(
 )
 
 app.add_middleware(RequestIdMiddleware)
+app.add_middleware(AccessLogMiddleware)
 
 
 class QueryRequest(BaseModel):

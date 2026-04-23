@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 
 import pytest
@@ -34,6 +35,17 @@ def test_health(client: TestClient) -> None:
     rid = r.headers.get("x-request-id")
     assert rid
     uuid.UUID(rid)
+
+
+def test_access_log_info_line(client: TestClient, caplog: pytest.LogCaptureFixture) -> None:
+    with caplog.at_level(logging.INFO, logger="orion.api.access"):
+        r = client.get("/health")
+    assert r.status_code == 200
+    messages = " ".join(caplog.messages)
+    assert "GET" in messages
+    assert "/health" in messages
+    assert "200" in messages
+    assert "ms rid=" in messages
 
 
 def test_request_id_echoed_when_client_sends_header(client: TestClient) -> None:
