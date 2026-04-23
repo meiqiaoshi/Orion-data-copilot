@@ -70,6 +70,20 @@ class PlanResponse(BaseModel):
     plan: dict[str, Any]
 
 
+class RateLimitErrorBody(BaseModel):
+    """JSON body returned by slowapi when ``POST`` rate limits are exceeded."""
+
+    error: str = Field(..., description='Typically begins with "Rate limit exceeded:".')
+
+
+_POST_RESPONSES: dict[int | str, dict[str, Any]] = {
+    429: {
+        "description": "Too many requests from this client IP (slowapi).",
+        "model": RateLimitErrorBody,
+    },
+}
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "version": __version__}
@@ -91,7 +105,7 @@ def version_info(_: None = Depends(verify_api_key_if_configured)) -> dict[str, s
 
 
 @limiter.limit(_LIMIT_POST)
-@app.post("/v1/plan", response_model=PlanResponse)
+@app.post("/v1/plan", response_model=PlanResponse, responses=_POST_RESPONSES)
 def plan_only(
     request: Request,
     req: QueryRequest,
@@ -104,7 +118,7 @@ def plan_only(
 
 
 @limiter.limit(_LIMIT_POST)
-@app.post("/v1/query", response_model=QueryResponse)
+@app.post("/v1/query", response_model=QueryResponse, responses=_POST_RESPONSES)
 def run_query(
     request: Request,
     req: QueryRequest,

@@ -63,6 +63,7 @@ Shortcuts (same shell must use your project Python, e.g. conda env `dev`):
 make install-dev   # same as pip install -e ".[dev,api]"
 make lint
 make test
+make test-fast     # pytest -m "not integration" (skips DuckDB ingestflow tests)
 # make api           # uvicorn app.api:app (install [api] first)
 # make docker-build  # needs Docker; then make docker-run
 # make compose-up    # docker compose up --build (see docker-compose.yml)

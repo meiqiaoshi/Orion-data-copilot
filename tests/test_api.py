@@ -107,15 +107,21 @@ def test_openapi_docs_available(client: TestClient) -> None:
 def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> None:
     r = client.get("/openapi.json")
     assert r.status_code == 200
-    schemes = r.json()["components"]["securitySchemes"]
+    body = r.json()
+    schemes = body["components"]["securitySchemes"]
     assert schemes["ApiKeyHeader"]["type"] == "apiKey"
     assert schemes["ApiKeyHeader"]["name"] == "X-API-Key"
     assert schemes["BearerAuth"]["scheme"] == "bearer"
-    desc = r.json()["info"]["description"]
+    desc = body["info"]["description"]
     assert "Authentication" in desc
     assert "Rate limiting" in desc
     assert "429" in desc
     assert "Readiness" in desc
+    for path in ("/v1/plan", "/v1/query"):
+        post = body["paths"][path]["post"]
+        assert "429" in post["responses"]
+        ref = post["responses"]["429"]["content"]["application/json"]["schema"].get("$ref")
+        assert ref == "#/components/schemas/RateLimitErrorBody"
 
 
 def test_query_rules_only(client: TestClient) -> None:
