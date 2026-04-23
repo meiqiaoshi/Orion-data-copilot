@@ -158,6 +158,15 @@ docker run --rm -p 8000:8000 \
 
 Working directory in the container is `/app`, which matches the default DuckDB path `warehouse.duckdb`. Mount your real metadata file as shown (or rely on images that already ship a DB). Omit `ORION_API_KEY` if you want an open `/v1` surface inside a trusted network only.
 
+**GHCR (prebuilt):** the workflow [`.github/workflows/publish-ghcr.yml`](.github/workflows/publish-ghcr.yml) pushes the API image to **GitHub Container Registry** on **`v*`** tag pushes (e.g. `v0.2.0` → image tags **`0.2.0`** and **`latest`**), and can be run manually (**Actions → Publish to GHCR → Run workflow**), using the version from `app/version.py` when not tagging.
+
+```bash
+# Replace with your org/repo in lowercase, e.g. ghcr.io/meiqiaoshi/orion-data-copilot:0.2.0
+docker pull ghcr.io/<github-owner>/<github-repo-in-lowercase>:latest
+```
+
+The package may be **private** until you change visibility under **Repository → Packages**.
+
 **Compose (optional):** copy [`.env.example`](.env.example) to `.env` and adjust keys, ensure `./warehouse.duckdb` exists (or comment out the `volumes` block in [`docker-compose.yml`](docker-compose.yml)), then:
 
 ```bash
@@ -170,6 +179,7 @@ Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, optional *
 
 | Path | Role |
 |------|------|
+| `.github/workflows/publish-ghcr.yml` | Build/push API image to **ghcr.io** (tags `v*` or manual) |
 | `Dockerfile` | Container image for the FastAPI API (`uvicorn` on port 8000) |
 | `docker-compose.yml` | Local `docker compose up` for the API + DuckDB mount |
 | `.env.example` | Template for API keys and optional `ORION_*` settings (copy to `.env`) |
