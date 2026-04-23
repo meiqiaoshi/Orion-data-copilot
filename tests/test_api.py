@@ -73,7 +73,9 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
     assert schemes["ApiKeyHeader"]["type"] == "apiKey"
     assert schemes["ApiKeyHeader"]["name"] == "X-API-Key"
     assert schemes["BearerAuth"]["scheme"] == "bearer"
-    assert "Authentication" in r.json()["info"]["description"]
+    desc = r.json()["info"]["description"]
+    assert "Authentication" in desc
+    assert "Rate limiting" in desc
 
 
 def test_query_rules_only(client: TestClient) -> None:

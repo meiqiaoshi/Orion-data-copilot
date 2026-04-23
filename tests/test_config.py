@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.config import resolve_duckdb_path, resolve_openai_model
+from app.config import api_post_rate_limit_spec, resolve_duckdb_path, resolve_openai_model
 
 
 def test_resolve_explicit_wins_over_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -38,3 +38,18 @@ def test_resolve_openai_model_env(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_resolve_openai_model_default(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ORION_OPENAI_MODEL", raising=False)
     assert resolve_openai_model(None) == "gpt-5"
+
+
+def test_api_post_rate_limit_spec_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ORION_API_RATE_LIMIT_POST", raising=False)
+    assert api_post_rate_limit_spec() == "60/minute"
+
+
+def test_api_post_rate_limit_spec_custom(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORION_API_RATE_LIMIT_POST", "30/second")
+    assert api_post_rate_limit_spec() == "30/second"
+
+
+def test_api_post_rate_limit_spec_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORION_API_RATE_LIMIT_POST", "off")
+    assert api_post_rate_limit_spec() == "1000000/minute"

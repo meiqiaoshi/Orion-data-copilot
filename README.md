@@ -142,6 +142,7 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 - **CORS** is open (`allow_origins=["*"]`) for local and tooling; tighten behind a reverse proxy in production.
 - **Tracing:** every response includes **`X-Request-ID`** (UUID unless the client sends a non-empty **`X-Request-ID`** header, which is echoed back). Listed in **`Access-Control-Expose-Headers`** for browser clients.
 - **Access logs:** the logger **`orion.api.access`** emits one **`INFO`** line per request (method, path, status, duration, `rid=`). Disable with **`ORION_API_ACCESS_LOG=0`** (or `false` / `no` / `off`).
+- **Rate limits:** **`POST /v1/plan`** and **`POST /v1/query`** are limited per client IP (slowapi; default **`60/minute`**). Set **`ORION_API_RATE_LIMIT_POST`** (e.g. `120/minute`) or **`off`** / **`0`** / **`false`** / **`none`** for a very high cap.
 
 ### Docker (HTTP API image)
 
@@ -173,7 +174,7 @@ The package may be **private** until you change visibility under **Repository â†
 docker compose up --build
 ```
 
-Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, optional **`ORION_OPENAI_MODEL`**, `ORION_API_KEY`, **`ORION_DUCKDB_PATH`** (default **`/app/warehouse.duckdb`**, matching the volume), and **`ORION_API_ACCESS_LOG`** (default on) from your shell or a root `.env` used for interpolation.
+Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, optional **`ORION_OPENAI_MODEL`**, `ORION_API_KEY`, **`ORION_DUCKDB_PATH`** (default **`/app/warehouse.duckdb`**, matching the volume), **`ORION_API_ACCESS_LOG`** (default on), and **`ORION_API_RATE_LIMIT_POST`** (default **`60/minute`**) from your shell or a root `.env` used for interpolation.
 
 ## Project layout
 

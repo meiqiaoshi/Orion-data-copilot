@@ -10,6 +10,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      ORION_API_RATE_LIMIT_POST: 10000/minute
     strategy:
       fail-fast: false
       matrix:

@@ -36,9 +36,9 @@
 ## Phase 3 (Future)
 
 ### HTTP API
-**Shipped (baseline):** FastAPI app (`app/api.py`): `POST /v1/plan`, `POST /v1/query`, `GET /health`, `GET /v1/version`; OpenAPI `/docs`; permissive CORS for development. Optional shared secret via **`ORION_API_KEY`** (`app/api_auth.py`). Dependencies: `requirements-api.txt` / `pip install -e ".[api]"`.
+**Shipped (baseline):** FastAPI app (`app/api.py`): `POST /v1/plan`, `POST /v1/query`, `GET /health`, `GET /v1/version`; OpenAPI `/docs`; permissive CORS for development; optional shared secret via **`ORION_API_KEY`** (`app/api_auth.py`); per-IP **slowapi** limits on the two POST routes (`ORION_API_RATE_LIMIT_POST`). Dependencies: `requirements-api.txt` / `pip install -e ".[api]"`.
 
-**Next:** rate limits, richer auth (OAuth / mTLS), and deployment hardening. **Dockerfile** + optional **GHCR** publish (see README and `publish-ghcr.yml`) ship the Uvicorn image.
+**Next:** richer auth (OAuth / mTLS) and deployment hardening. **Dockerfile** + optional **GHCR** publish (see README and `publish-ghcr.yml`) ship the Uvicorn image.
 
 ### Web UI
 **Shipped (baseline):** optional Streamlit app (`scripts/streamlit_app.py`), `requirements-ui.txt`; sidebar LLM toggle and recent-query history; optional remote mode via **`ORION_API_BASE`** (HTTP `POST /v1/query` through `app/remote_query.py`).

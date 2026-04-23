@@ -20,6 +20,7 @@ ui = [
 api = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
+    "slowapi>=0.1.9",
 ]
 dev = [
     "pytest>=8.0",
