@@ -9,6 +9,8 @@ import pytest
 from app.connectors.ingestflow import get_failed_ingestion_runs, get_recent_ingestion_runs
 from app.schemas import EntityFilter, TimeFilter
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def duckdb_path(tmp_path: Path) -> str:

@@ -54,6 +54,7 @@ pip install -e ".[dev,api]"
 # or: pip install -r requirements-dev.txt && pip install -r requirements-api.txt
 ruff check app tests main.py scripts
 pytest
+# pytest -m "not integration"   # skip DuckDB ingestflow tests for a faster run
 ```
 
 Shortcuts (same shell must use your project Python, e.g. conda env `dev`):
@@ -137,7 +138,7 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 
 - **POST `/v1/plan`** — same JSON body as below; returns **`plan` only** (no connector calls — useful for previews and avoiding DuckDB/SentinelDQ work).
 - **POST `/v1/query`** — JSON body `{"query": "<natural language>", "use_llm": true}` → JSON with `plan` and `execution` (same structure as the Streamlit JSON panels; datetimes as ISO strings).
-- **GET `/health`**, **GET `/v1/version`**, **GET `/`** — liveness and metadata (`/health` and `/` stay unauthenticated even when an API key is configured).
+- **GET `/health`** (`status`, `version`), **GET `/v1/version`**, **GET `/`** — liveness and metadata (`/health` and `/` stay unauthenticated even when an API key is configured).
 - **Optional auth:** set **`ORION_API_KEY`** in the environment. When set, **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`** require header **`X-API-Key: <key>`** or **`Authorization: Bearer <key>`**. Omit the variable for local development (no key required).
 - **CORS** is open (`allow_origins=["*"]`) for local and tooling; tighten behind a reverse proxy in production.
 - **Tracing:** every response includes **`X-Request-ID`** (UUID unless the client sends a non-empty **`X-Request-ID`** header, which is echoed back). Listed in **`Access-Control-Expose-Headers`** for browser clients.

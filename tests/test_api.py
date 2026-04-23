@@ -31,7 +31,7 @@ def test_root_lists_entrypoints(client: TestClient) -> None:
 def test_health(client: TestClient) -> None:
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
+    assert r.json() == {"status": "ok", "version": __version__}
     rid = r.headers.get("x-request-id")
     assert rid
     uuid.UUID(rid)
@@ -157,7 +157,7 @@ def test_health_unauthenticated_when_api_key_configured(
     monkeypatch.setenv("ORION_API_KEY", "secret")
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
+    assert r.json() == {"status": "ok", "version": __version__}
 
 
 def test_wrong_api_key_returns_401(
