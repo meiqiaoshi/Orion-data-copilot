@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from app.config import api_post_rate_limit_spec, resolve_duckdb_path, resolve_openai_model
+from app.config import (
+    api_post_rate_limit_spec,
+    duckdb_runtime_ready,
+    resolve_duckdb_path,
+    resolve_openai_model,
+)
 
 
 def test_resolve_explicit_wins_over_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -53,3 +58,45 @@ def test_api_post_rate_limit_spec_custom(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_api_post_rate_limit_spec_off(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ORION_API_RATE_LIMIT_POST", "off")
     assert api_post_rate_limit_spec() == "1000000/minute"
+
+
+def test_duckdb_runtime_ready_creatable_in_empty_dir(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: object
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ORION_DUCKDB_PATH", raising=False)
+    ok, err = duckdb_runtime_ready(None)
+    assert ok is True
+    assert err == ""
+
+
+def test_duckdb_runtime_ready_existing_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: object
+) -> None:
+    db = tmp_path / "meta.duckdb"
+    db.write_bytes(b"")
+    monkeypatch.setenv("ORION_DUCKDB_PATH", str(db))
+    ok, err = duckdb_runtime_ready(None)
+    assert ok is True
+    assert err == ""
+
+
+def test_duckdb_runtime_ready_parent_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(
+        "ORION_DUCKDB_PATH",
+        "/this_path_should_not_exist_on_ci_zzzz/sub/db.duckdb",
+    )
+    ok, err = duckdb_runtime_ready(None)
+    assert ok is False
+    assert "parent" in err.lower() or "missing" in err.lower()
+
+
+def test_duckdb_runtime_ready_path_is_directory(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: object
+) -> None:
+    d = tmp_path / "not_a_file"
+    d.mkdir()
+    monkeypatch.setenv("ORION_DUCKDB_PATH", str(d))
+    ok, err = duckdb_runtime_ready(None)
+    assert ok is False
+    assert "regular file" in err.lower()

@@ -36,7 +36,7 @@
 ## Phase 3 (Future)
 
 ### HTTP API
-**Shipped (baseline):** FastAPI app (`app/api.py`): `POST /v1/plan`, `POST /v1/query`, `GET /health` (status + version), `GET /v1/version`; OpenAPI `/docs`; permissive CORS for development; optional shared secret via **`ORION_API_KEY`** (`app/api_auth.py`); per-IP **slowapi** limits on the two POST routes (`ORION_API_RATE_LIMIT_POST`). Dependencies: `requirements-api.txt` / `pip install -e ".[api]"`.
+**Shipped (baseline):** FastAPI app (`app/api.py`): `POST /v1/plan`, `POST /v1/query`, `GET /health` (status + version), `GET /ready` (DuckDB readiness), `GET /v1/version`; OpenAPI `/docs`; permissive CORS for development; optional shared secret via **`ORION_API_KEY`** (`app/api_auth.py`); per-IP **slowapi** limits on the two POST routes (`ORION_API_RATE_LIMIT_POST`). Dependencies: `requirements-api.txt` / `pip install -e ".[api]"`.
 
 **Next:** richer auth (OAuth / mTLS) and deployment hardening. **Dockerfile** + optional **GHCR** publish (see README and `publish-ghcr.yml`) ship the Uvicorn image.
 

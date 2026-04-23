@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 _DEFAULT_OPENAI_MODEL = "gpt-5"
 
@@ -42,3 +43,33 @@ def resolve_duckdb_path(explicit: str | None) -> str:
     if env:
         return env
     return "warehouse.duckdb"
+
+
+def duckdb_runtime_ready(explicit: str | None = None) -> tuple[bool, str]:
+    """
+    Return ``(True, "")`` if the resolved DuckDB path looks usable from the process.
+
+    Existing files require read access only (read-only volume mounts are OK). Missing
+    files require a writable parent directory so DuckDB can create the database.
+    """
+    path_str = resolve_duckdb_path(explicit)
+    p = Path(path_str).expanduser()
+    try:
+        p = p.resolve()
+    except OSError as exc:
+        return False, f"Invalid DuckDB path {path_str!r}: {exc}"
+
+    parent = p.parent
+    if not parent.is_dir():
+        return False, f"DuckDB parent directory missing or not a directory: {parent}"
+
+    if p.exists():
+        if not p.is_file():
+            return False, f"DuckDB path is not a regular file: {path_str!r}"
+        if not os.access(p, os.R_OK):
+            return False, f"DuckDB file is not readable: {path_str!r}"
+        return True, ""
+
+    if not os.access(parent, os.W_OK | os.X_OK):
+        return False, f"Cannot create DuckDB file (parent not writable): {parent}"
+    return True, ""

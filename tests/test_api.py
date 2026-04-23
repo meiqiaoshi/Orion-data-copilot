@@ -26,6 +26,7 @@ def test_root_lists_entrypoints(client: TestClient) -> None:
     assert body["version"] == __version__
     assert body["docs"] == "/docs"
     assert body["plan"] == "POST /v1/plan"
+    assert body["ready"] == "/ready"
 
 
 def test_health(client: TestClient) -> None:
@@ -35,6 +36,43 @@ def test_health(client: TestClient) -> None:
     rid = r.headers.get("x-request-id")
     assert rid
     uuid.UUID(rid)
+
+
+def test_ready_ok_in_empty_tmp_dir(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: object
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ORION_DUCKDB_PATH", raising=False)
+    r = client.get("/ready")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ready"
+    assert body["duckdb"].endswith("warehouse.duckdb")
+
+
+def test_ready_503_when_parent_missing(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv(
+        "ORION_DUCKDB_PATH",
+        "/this_path_should_not_exist_on_ci_zzzz/sub/db.duckdb",
+    )
+    r = client.get("/ready")
+    assert r.status_code == 503
+    assert "detail" in r.json()
+
+
+def test_ready_unauthenticated_when_api_key_configured(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: object,
+) -> None:
+    monkeypatch.setenv("ORION_API_KEY", "secret")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ORION_DUCKDB_PATH", raising=False)
+    r = client.get("/ready")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ready"
 
 
 def test_access_log_info_line(client: TestClient, caplog: pytest.LogCaptureFixture) -> None:
@@ -76,6 +114,8 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
     desc = r.json()["info"]["description"]
     assert "Authentication" in desc
     assert "Rate limiting" in desc
+    assert "429" in desc
+    assert "Readiness" in desc
 
 
 def test_query_rules_only(client: TestClient) -> None:

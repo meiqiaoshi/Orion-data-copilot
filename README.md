@@ -70,7 +70,7 @@ make test
 
 See [`CHANGELOG.md`](CHANGELOG.md) for a coarse history of shipped features.
 
-GitHub **CI** uses `pip install -e ".[dev,api]"` so every run checks packaging, the **`orion-copilot`** entry point, and the **HTTP API** test suite (FastAPI + Uvicorn). A second job **validates `docker compose`**, **builds the Docker image**, and hits **`/health`** in a short-lived container.
+GitHub **CI** runs **`pytest -m "not integration"`** on Python 3.12 for a fast signal, then a **matrix** (`3.10`–`3.13`) with the full suite, **`ruff`**, and **`orion-copilot --version`**. A **Docker** job **validates `docker compose`**, **builds the image**, and curls **`/health`** and **`/ready`** in a short-lived container.
 
 Some tests build a **temporary DuckDB** with an `ingestion_runs` schema (see `tests/test_ingestflow_integration.py`); they do not use your real `warehouse.duckdb`.
 
@@ -138,12 +138,12 @@ uvicorn app.api:app --reload --host 127.0.0.1 --port 8000
 
 - **POST `/v1/plan`** — same JSON body as below; returns **`plan` only** (no connector calls — useful for previews and avoiding DuckDB/SentinelDQ work).
 - **POST `/v1/query`** — JSON body `{"query": "<natural language>", "use_llm": true}` → JSON with `plan` and `execution` (same structure as the Streamlit JSON panels; datetimes as ISO strings).
-- **GET `/health`** (`status`, `version`), **GET `/v1/version`**, **GET `/`** — liveness and metadata (`/health` and `/` stay unauthenticated even when an API key is configured).
+- **GET `/health`** (`status`, `version`), **GET `/ready`** (DuckDB path usable or creatable — **`503`** if not), **GET `/v1/version`**, **GET `/`** — liveness/readiness and metadata (`/health`, `/ready`, and `/` stay unauthenticated even when an API key is configured).
 - **Optional auth:** set **`ORION_API_KEY`** in the environment. When set, **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`** require header **`X-API-Key: <key>`** or **`Authorization: Bearer <key>`**. Omit the variable for local development (no key required).
 - **CORS** is open (`allow_origins=["*"]`) for local and tooling; tighten behind a reverse proxy in production.
 - **Tracing:** every response includes **`X-Request-ID`** (UUID unless the client sends a non-empty **`X-Request-ID`** header, which is echoed back). Listed in **`Access-Control-Expose-Headers`** for browser clients.
 - **Access logs:** the logger **`orion.api.access`** emits one **`INFO`** line per request (method, path, status, duration, `rid=`). Disable with **`ORION_API_ACCESS_LOG=0`** (or `false` / `no` / `off`).
-- **Rate limits:** **`POST /v1/plan`** and **`POST /v1/query`** are limited per client IP (slowapi; default **`60/minute`**). Set **`ORION_API_RATE_LIMIT_POST`** (e.g. `120/minute`) or **`off`** / **`0`** / **`false`** / **`none`** for a very high cap.
+- **Rate limits:** **`POST /v1/plan`** and **`POST /v1/query`** are limited per client IP (slowapi; default **`60/minute`**). Set **`ORION_API_RATE_LIMIT_POST`** (e.g. `120/minute`) or **`off`** / **`0`** / **`false`** / **`none`** for a very high cap. Over the limit, the server responds **`429`** with JSON **`{"error": "Rate limit exceeded: …"}`** (see OpenAPI description at **`/docs`**).
 
 ### Docker (HTTP API image)
 

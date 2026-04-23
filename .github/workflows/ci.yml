@@ -8,6 +8,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-fast:
+    runs-on: ubuntu-latest
+    env:
+      ORION_API_RATE_LIMIT_POST: 10000/minute
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            pyproject.toml
+
+      - name: Install dependencies
+        run: pip install -e ".[dev,api]"
+
+      - name: Run tests (exclude integration)
+        run: pytest -q -m "not integration"
+
   test:
     runs-on: ubuntu-latest
     env:
@@ -53,9 +76,10 @@ jobs:
       - name: Build API Docker image
         run: docker build -t orion-data-copilot:ci .
 
-      - name: Smoke test (container /health)
+      - name: Smoke test (container /health, /ready)
         run: |
           set -eux
           docker run -d --name odc -p 8765:8000 orion-data-copilot:ci
           curl -sf --retry 30 --retry-delay 1 --retry-connrefused http://127.0.0.1:8765/health
+          curl -sf --retry 5 --retry-delay 1 --retry-connrefused http://127.0.0.1:8765/ready
           docker rm -f odc

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -15,7 +15,7 @@ from starlette.requests import Request
 
 from app.api_auth import verify_api_key_if_configured
 from app.api_middleware import REQUEST_ID_HEADER, AccessLogMiddleware, RequestIdMiddleware
-from app.config import api_post_rate_limit_spec
+from app.config import api_post_rate_limit_spec, duckdb_runtime_ready, resolve_duckdb_path
 from app.executor import execute_plan
 from app.json_serialization import execution_result_to_dict, plan_result_to_dict
 from app.planner import plan_query
@@ -75,6 +75,16 @@ def health() -> dict[str, str]:
     return {"status": "ok", "version": __version__}
 
 
+@app.get("/ready")
+def ready() -> dict[str, str]:
+    """Readiness: configured DuckDB path must exist and be readable, or be creatable."""
+    ok, err = duckdb_runtime_ready(None)
+    path = resolve_duckdb_path(None)
+    if not ok:
+        raise HTTPException(status_code=503, detail=err)
+    return {"status": "ready", "duckdb": path}
+
+
 @app.get("/v1/version")
 def version_info(_: None = Depends(verify_api_key_if_configured)) -> dict[str, str]:
     return {"version": __version__}
@@ -116,6 +126,7 @@ def root() -> dict[str, str]:
         "version": __version__,
         "docs": "/docs",
         "health": "/health",
+        "ready": "/ready",
         "plan": "POST /v1/plan",
         "query": "POST /v1/query",
     }
@@ -129,7 +140,13 @@ _OPENAPI_AUTH_BLURB = (
     "### Rate limiting\n"
     "**`POST /v1/plan`** and **`POST /v1/query`** share a per-client limit (default **`60/minute`**). "
     "Override with **`ORION_API_RATE_LIMIT_POST`** using slowapi syntax (e.g. `120/minute`). "
-    "Set to **`off`**, **`0`**, **`false`**, or **`none`** for an effectively unlimited cap."
+    "Set to **`off`**, **`0`**, **`false`**, or **`none`** for an effectively unlimited cap. "
+    "When exceeded, the API returns **`429 Too Many Requests`** with JSON "
+    "**`{\"error\": \"Rate limit exceeded: …\"}`** (slowapi) and may add rate-limit headers.\n\n"
+    "### Readiness\n"
+    "**`GET /ready`** returns **`200`** when the configured DuckDB file (from **`ORION_DUCKDB_PATH`** "
+    "or default **`warehouse.duckdb`**) exists and is readable, or does not exist but its parent "
+    "directory is writable so DuckDB can create it. Otherwise **`503`** with a **`detail`** string."
 )
 
 
