@@ -8,6 +8,7 @@ Run from the repository root:
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -21,6 +22,7 @@ import streamlit as st
 from app.executor import execute_plan
 from app.json_serialization import execution_result_to_dict, plan_result_to_dict
 from app.planner import plan_query
+from app.remote_query import call_v1_query
 from app.schemas import UserQuery
 from app.version import __version__
 
@@ -36,12 +38,21 @@ def main() -> None:
     st.title("Orion Data Copilot")
     st.caption(f"Version {__version__} · same engine as `main.py`")
 
+    api_base = os.environ.get("ORION_API_BASE", "").strip().rstrip("/")
+
     with st.sidebar:
         st.header("Options")
+        if api_base:
+            st.info(
+                f"**Remote API:** `{api_base}` (`POST /v1/query`). "
+                "Set `ORION_API_KEY` if the server requires it."
+            )
         use_llm = st.toggle("Use LLM planner (OpenAI)", value=True)
         st.markdown(
             "Requires `OPENAI_API_KEY` when enabled. "
-            "Turn off to match `python main.py --no-llm` (rules only)."
+            "Turn off to match `python main.py --no-llm` (rules only).\n\n"
+            "In remote mode, the API server must have keys for planning/execution; "
+            "this app only sends the natural-language query to `ORION_API_BASE`."
         )
         st.divider()
         st.subheader("Recent runs")
@@ -60,32 +71,60 @@ def main() -> None:
     run = st.button("Plan & execute", type="primary")
 
     if run and query.strip():
-        uq = UserQuery(raw_text=query.strip())
-        with st.spinner("Planning..."):
-            plan = plan_query(uq, use_llm=use_llm)
-        with st.spinner("Executing..."):
-            execution = execute_plan(plan)
+        text = query.strip()
+        if api_base:
+            try:
+                with st.spinner("Calling API..."):
+                    plan_dict, exec_dict = call_v1_query(api_base, text, use_llm)
+            except RuntimeError as exc:
+                st.error(str(exc))
+            else:
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.subheader("Plan")
+                    st.json(plan_dict)
+                with c2:
+                    st.subheader("Execution")
+                    st.json(exec_dict)
+                st.subheader("Output")
+                out = str(exec_dict.get("output", ""))
+                st.markdown(out)
+                st.session_state.history.append(
+                    {
+                        "query": text,
+                        "planner": str(plan_dict.get("planner_source", "")),
+                        "intent": str(plan_dict.get("intent", "")),
+                        "action": str(plan_dict.get("action", "")),
+                        "output": out,
+                    }
+                )
+        else:
+            uq = UserQuery(raw_text=text)
+            with st.spinner("Planning..."):
+                plan = plan_query(uq, use_llm=use_llm)
+            with st.spinner("Executing..."):
+                execution = execute_plan(plan)
 
-        c1, c2 = st.columns(2)
-        with c1:
-            st.subheader("Plan")
-            st.json(plan_result_to_dict(plan))
-        with c2:
-            st.subheader("Execution")
-            st.json(execution_result_to_dict(execution))
+            c1, c2 = st.columns(2)
+            with c1:
+                st.subheader("Plan")
+                st.json(plan_result_to_dict(plan))
+            with c2:
+                st.subheader("Execution")
+                st.json(execution_result_to_dict(execution))
 
-        st.subheader("Output")
-        st.markdown(execution.output)
+            st.subheader("Output")
+            st.markdown(execution.output)
 
-        st.session_state.history.append(
-            {
-                "query": query.strip(),
-                "planner": plan.planner_source,
-                "intent": plan.intent,
-                "action": plan.action,
-                "output": execution.output,
-            }
-        )
+            st.session_state.history.append(
+                {
+                    "query": text,
+                    "planner": plan.planner_source,
+                    "intent": plan.intent,
+                    "action": plan.action,
+                    "output": execution.output,
+                }
+            )
 
 
 if __name__ == "__main__":

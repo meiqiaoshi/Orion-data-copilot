@@ -8,7 +8,7 @@ All notable changes to this project are documented here. The format is loosely i
 
 - FastAPI HTTP API (`app/api.py`): `POST /v1/plan` (plan only), `POST /v1/query`, health/version routes, OpenAPI at `/docs` with documented **`ApiKeyHeader`** / **`BearerAuth`** schemes; **`X-Request-ID`** and optional **`orion.api.access`** request logs (`app/api_middleware.py`, **`ORION_API_ACCESS_LOG`**).
 - Optional API protection via `ORION_API_KEY` (`app/api_auth.py`).
-- Optional Streamlit UI (`scripts/streamlit_app.py`) and `requirements-ui.txt`.
+- Optional Streamlit UI (`scripts/streamlit_app.py`) and `requirements-ui.txt`; remote mode via **`ORION_API_BASE`** + `app/remote_query.py` calling `POST /v1/query`.
 - PEP 621 packaging: `pip install -e .`, `orion-copilot` CLI, optional extras `[ui]`, `[api]`, `[dev]`.
 - Shared JSON helpers for plan/execution (`app/json_serialization.py`).
 - `Makefile` for common local commands (`lint`, `test`, `install-dev`, `api`).

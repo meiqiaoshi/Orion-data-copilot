@@ -118,6 +118,8 @@ streamlit run scripts/streamlit_app.py
 
 The sidebar toggles **LLM vs rules-only** planning (same behavior as `python main.py --no-llm` when disabled). Recent queries appear in the sidebar for quick reference.
 
+**Remote API mode (optional):** set **`ORION_API_BASE`** (e.g. `http://127.0.0.1:8000` where `uvicorn` runs) so Streamlit **POST**s to **`/v1/query`** instead of importing `app` in-process. Use **`ORION_API_KEY`** if the server enforces it. The API server does planning and execution (DuckDB paths and keys follow **its** environment). `app/remote_query.py` implements the client.
+
 ## HTTP API (FastAPI, optional)
 
 Install API dependencies:
@@ -185,6 +187,7 @@ Open **http://127.0.0.1:8000/docs**. Compose passes `OPENAI_API_KEY`, optional *
 | `app/llm_planner.py` | OpenAI Responses API → JSON plan |
 | `app/time_parser.py`, `app/entity_parser.py` | Heuristic time/entity extraction for rules |
 | `app/json_serialization.py` | Plan/execution → JSON-safe dicts (API, Streamlit) |
+| `app/remote_query.py` | Optional HTTP client for `POST /v1/query` (Streamlit remote mode) |
 | `app/api.py` | Optional FastAPI app (`uvicorn app.api:app`) |
 | `app/api_auth.py` | Optional `ORION_API_KEY` check for `/v1/*` |
 | `app/api_middleware.py` | `X-Request-ID` + access log middleware (`orion.api.access`) |

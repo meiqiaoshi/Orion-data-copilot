@@ -41,7 +41,7 @@
 **Next:** rate limits, richer auth (OAuth / mTLS), and deployment hardening. A **Dockerfile** in the repo runs the same Uvicorn app in a container (see README).
 
 ### Web UI
-**Shipped (baseline):** optional Streamlit app (`scripts/streamlit_app.py`), `requirements-ui.txt`; sidebar LLM toggle and recent-query history.
+**Shipped (baseline):** optional Streamlit app (`scripts/streamlit_app.py`), `requirements-ui.txt`; sidebar LLM toggle and recent-query history; optional remote mode via **`ORION_API_BASE`** (HTTP `POST /v1/query` through `app/remote_query.py`).
 
 **Next:**
 - Chat-style layout and richer session UX if we outgrow the prototype

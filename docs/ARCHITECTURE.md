@@ -50,7 +50,7 @@ Formatter (AI-style response)
 
 ### Query Interface
 - **CLI** (`main.py` / `orion-copilot`): interactive prompt; flags such as `--no-llm`, `--version`, and `--duckdb` (IngestFlow DB path)
-- **Optional Streamlit UI** (`scripts/streamlit_app.py`): same planner and executor as the CLI; install via `requirements-ui.txt`
+- **Optional Streamlit UI** (`scripts/streamlit_app.py`): in-process by default, or with **`ORION_API_BASE`**, the same `POST /v1/query` as the HTTP API (`app/remote_query.py`); install via `requirements-ui.txt`
 - **Optional HTTP API** (`app/api.py`, FastAPI + Uvicorn): `POST /v1/plan` (plan JSON only), `POST /v1/query` (plan + execution); OpenAPI at `/docs`; optional shared secret `ORION_API_KEY` via `app/api_auth.py`; install via `requirements-api.txt` or `pip install -e ".[api]"`
 
 ### Planner Layer
