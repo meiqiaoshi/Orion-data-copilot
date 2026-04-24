@@ -117,11 +117,22 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
     assert "Rate limiting" in desc
     assert "429" in desc
     assert "Readiness" in desc
+    assert "401" in desc
     for path in ("/v1/plan", "/v1/query"):
         post = body["paths"][path]["post"]
+        assert "401" in post["responses"]
+        assert (
+            post["responses"]["401"]["content"]["application/json"]["schema"].get("$ref")
+            == "#/components/schemas/HttpErrorBody"
+        )
         assert "429" in post["responses"]
         ref = post["responses"]["429"]["content"]["application/json"]["schema"].get("$ref")
         assert ref == "#/components/schemas/RateLimitErrorBody"
+    v1_ver = body["paths"]["/v1/version"]["get"]
+    assert (
+        v1_ver["responses"]["401"]["content"]["application/json"]["schema"].get("$ref")
+        == "#/components/schemas/HttpErrorBody"
+    )
     ready_get = body["paths"]["/ready"]["get"]
     assert (
         ready_get["responses"]["200"]["content"]["application/json"]["schema"].get("$ref")
@@ -129,7 +140,7 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
     )
     assert (
         ready_get["responses"]["503"]["content"]["application/json"]["schema"].get("$ref")
-        == "#/components/schemas/NotReadyErrorBody"
+        == "#/components/schemas/HttpErrorBody"
     )
 
 

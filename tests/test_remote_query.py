@@ -73,6 +73,47 @@ def test_check_v1_ready_http_503() -> None:
     assert body["detail"] == "parent missing"
 
 
+def test_call_v1_query_succeeds_with_check_ready() -> None:
+    ready_data = json.dumps({"status": "ready", "duckdb": "/x.duckdb"}).encode()
+    post_payload = {
+        "plan": {"intent": "unknown", "planner_source": "rules"},
+        "execution": {"status": "success", "source": "system", "output": "ok"},
+    }
+    post_data = json.dumps(post_payload).encode()
+
+    class _ReadyResp:
+        def read(self) -> bytes:
+            return ready_data
+
+        def getcode(self) -> int:
+            return 200
+
+        def __enter__(self) -> _ReadyResp:
+            return self
+
+        def __exit__(self, *a: object) -> None:
+            return None
+
+    class _PostResp:
+        def read(self) -> bytes:
+            return post_data
+
+        def __enter__(self) -> _PostResp:
+            return self
+
+        def __exit__(self, *a: object) -> None:
+            return None
+
+    with patch(
+        "app.remote_query.urllib.request.urlopen",
+        side_effect=[_ReadyResp(), _PostResp()],
+    ):
+        plan, ex = call_v1_query("http://127.0.0.1:9", "hi", use_llm=False, check_ready=True, timeout_s=1.0)
+
+    assert plan["intent"] == "unknown"
+    assert ex["output"] == "ok"
+
+
 def test_call_v1_query_fails_when_check_ready_and_503() -> None:
     err = urllib.error.HTTPError(
         "http://x/ready",

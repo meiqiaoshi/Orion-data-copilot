@@ -81,8 +81,8 @@ class ReadyResponse(BaseModel):
     duckdb: str = Field(..., description="Resolved path from `ORION_DUCKDB_PATH` (or default).")
 
 
-class NotReadyErrorBody(BaseModel):
-    """JSON for ``HTTP 503`` from ``GET /ready`` (same shape as other ``HTTPException`` errors)."""
+class HttpErrorBody(BaseModel):
+    """JSON for FastAPI ``HTTPException`` (401, 503, etc.)."""
 
     detail: str
 
@@ -90,15 +90,26 @@ class NotReadyErrorBody(BaseModel):
 _READY_RESPONSES: dict[int | str, dict[str, Any]] = {
     503: {
         "description": "Configured DuckDB path is not available (readiness check failed).",
-        "model": NotReadyErrorBody,
+        "model": HttpErrorBody,
     },
 }
 
 
 _POST_RESPONSES: dict[int | str, dict[str, Any]] = {
+    401: {
+        "description": "Missing or invalid API key when `ORION_API_KEY` is set on the server.",
+        "model": HttpErrorBody,
+    },
     429: {
         "description": "Too many requests from this client IP (slowapi).",
         "model": RateLimitErrorBody,
+    },
+}
+
+_V1_VERSION_RESPONSES: dict[int | str, dict[str, Any]] = {
+    401: {
+        "description": "Missing or invalid API key when `ORION_API_KEY` is set on the server.",
+        "model": HttpErrorBody,
     },
 }
 
@@ -118,7 +129,7 @@ def ready() -> ReadyResponse:
     return ReadyResponse(duckdb=path)
 
 
-@app.get("/v1/version")
+@app.get("/v1/version", responses=_V1_VERSION_RESPONSES)
 def version_info(_: None = Depends(verify_api_key_if_configured)) -> dict[str, str]:
     return {"version": __version__}
 
@@ -169,6 +180,8 @@ _OPENAPI_AUTH_BLURB = (
     "\n\n### Authentication\n"
     "When the server sets **`ORION_API_KEY`**, send **`X-API-Key`** or **`Authorization: Bearer "
     "<key>`** on **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`**. "
+    "If the key is missing or wrong, those routes return **`401`** with JSON "
+    "**`{\"detail\": \"...\"}`**. "
     "If that variable is unset, those routes stay open (development default).\n\n"
     "### Rate limiting\n"
     "**`POST /v1/plan`** and **`POST /v1/query`** share a per-client limit (default **`60/minute`**). "

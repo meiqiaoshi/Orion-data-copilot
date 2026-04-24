@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format is loosely i
 
 ### Added
 
-- **GET `/ready`** OpenAPI: **`200`** model **`ReadyResponse`**, **`503`** model **`NotReadyErrorBody`**; **`check_v1_ready`** in **`app/remote_query.py`**; Streamlit **`ORION_API_CHECK_READY`** runs **`GET /ready`** before **`POST /v1/query`** when set.
+- **GET `/ready`** OpenAPI: **`200`** model **`ReadyResponse`**, **`503`** model **`HttpErrorBody`**; **`check_v1_ready`** in **`app/remote_query.py`**; Streamlit **`ORION_API_CHECK_READY`** runs **`GET /ready`** before **`POST /v1/query`** when set. Protected routes document **`401`** with **`HttpErrorBody`** in **`/openapi.json`**.
 - **`GET /ready`** readiness probe: **`200`** when the configured DuckDB path is readable or can be created (`duckdb_runtime_ready` in `app/config.py`); **`503`** otherwise. Same auth rules as **`/health`** (no API key).
 - CI **`test-fast`** job (Python 3.12, `pytest -m "not integration"`); Docker smoke test also curls **`/ready`**.
 - OpenAPI description documents **`429`** rate-limit JSON and **`/ready`** semantics; **`POST /v1/plan`** and **`POST /v1/query`** list a **`429`** response with schema **`RateLimitErrorBody`** in **`/openapi.json`** / **`/docs`**.
