@@ -13,6 +13,7 @@ services:
       ORION_DUCKDB_PATH: ${ORION_DUCKDB_PATH:-/app/warehouse.duckdb}
       ORION_API_ACCESS_LOG: ${ORION_API_ACCESS_LOG:-1}
       ORION_API_RATE_LIMIT_POST: ${ORION_API_RATE_LIMIT_POST:-60/minute}
+      ORION_CORS_ORIGINS: ${ORION_CORS_ORIGINS:-*}
     volumes:
       # Comment out if you do not have warehouse.duckdb yet (Docker may create a directory otherwise).
       - ./warehouse.duckdb:/app/warehouse.duckdb:ro

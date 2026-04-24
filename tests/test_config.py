@@ -4,10 +4,34 @@ import pytest
 
 from app.config import (
     api_post_rate_limit_spec,
+    cors_allow_origins,
     duckdb_runtime_ready,
     resolve_duckdb_path,
     resolve_openai_model,
 )
+
+
+def test_cors_allow_origins_default_wildcard(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ORION_CORS_ORIGINS", raising=False)
+    assert cors_allow_origins() == ["*"]
+
+
+def test_cors_allow_origins_explicit_star(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORION_CORS_ORIGINS", "*")
+    assert cors_allow_origins() == ["*"]
+
+
+def test_cors_allow_origins_comma_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(
+        "ORION_CORS_ORIGINS",
+        "https://a.example, http://localhost:3000 ,",
+    )
+    assert cors_allow_origins() == ["https://a.example", "http://localhost:3000"]
+
+
+def test_cors_allow_origins_empty_parts_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ORION_CORS_ORIGINS", "  ,  , ")
+    assert cors_allow_origins() == ["*"]
 
 
 def test_resolve_explicit_wins_over_env(monkeypatch: pytest.MonkeyPatch) -> None:

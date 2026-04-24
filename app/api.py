@@ -15,7 +15,12 @@ from starlette.requests import Request
 
 from app.api_auth import verify_api_key_if_configured
 from app.api_middleware import REQUEST_ID_HEADER, AccessLogMiddleware, RequestIdMiddleware
-from app.config import api_post_rate_limit_spec, duckdb_runtime_ready, resolve_duckdb_path
+from app.config import (
+    api_post_rate_limit_spec,
+    cors_allow_origins,
+    duckdb_runtime_ready,
+    resolve_duckdb_path,
+)
 from app.executor import execute_plan
 from app.json_serialization import execution_result_to_dict, plan_result_to_dict
 from app.planner import plan_query
@@ -52,7 +57,7 @@ _LIMIT_POST = api_post_rate_limit_spec()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_allow_origins(),
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -212,7 +217,11 @@ _OPENAPI_AUTH_BLURB = (
     "### Readiness\n"
     "**`GET /ready`** returns **`200`** when the configured DuckDB file (from **`ORION_DUCKDB_PATH`** "
     "or default **`warehouse.duckdb`**) exists and is readable, or does not exist but its parent "
-    "directory is writable so DuckDB can create it. Otherwise **`503`** with a **`detail`** string."
+    "directory is writable so DuckDB can create it. Otherwise **`503`** with a **`detail`** string.\n\n"
+    "### CORS\n"
+    "Default **`allow_origins`** is **`[\"*\"]`** (development). Set **`ORION_CORS_ORIGINS`** to a "
+    "comma-separated allowlist (e.g. `https://myapp.example,http://127.0.0.1:8501`) to tighten in production; "
+    "use **`*`** or leave unset for a wildcard."
 )
 
 

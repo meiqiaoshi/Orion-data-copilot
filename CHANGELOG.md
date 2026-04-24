@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The format is loosely i
 
 ### Added
 
+- **`ORION_CORS_ORIGINS`**: comma-separated CORS allowlist for the HTTP API (default **`*`**); **`cors_allow_origins()`** in **`app/config.py`**; Compose and **`.env.example`** entries.
 - OpenAPI **`tags`** (**`probes`**, **`v1`**, **`service`**) with descriptions for Swagger / ReDoc grouping; **`GET /`** includes **`redoc`**: **`/redoc`**.
 - OpenAPI **`security`** on **`POST /v1/plan`**, **`POST /v1/query`**, and **`GET /v1/version`** (API key **or** bearer) so **`/docs`** **Authorize** applies; **`GET /`** includes **`openapi`**: **`/openapi.json`**.
 - **GET `/ready`** OpenAPI: **`200`** model **`ReadyResponse`**, **`503`** model **`HttpErrorBody`**; **`check_v1_ready`** in **`app/remote_query.py`**; Streamlit **`ORION_API_CHECK_READY`** runs **`GET /ready`** before **`POST /v1/query`** when set. Protected routes document **`401`** with **`HttpErrorBody`** in **`/openapi.json`**.

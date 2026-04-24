@@ -8,6 +8,20 @@ from pathlib import Path
 _DEFAULT_OPENAI_MODEL = "gpt-5"
 
 
+def cors_allow_origins() -> list[str]:
+    """
+    Origins for FastAPI ``CORSMiddleware`` ``allow_origins``.
+
+    Set ``ORION_CORS_ORIGINS`` to a comma-separated list (e.g. ``https://app.example.com,http://localhost:3000``).
+    Use ``*`` or leave unset for permissive development (``["*"]``).
+    """
+    raw = os.environ.get("ORION_CORS_ORIGINS", "*").strip()
+    if raw == "" or raw == "*":
+        return ["*"]
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    return parts if parts else ["*"]
+
+
 def resolve_openai_model(explicit: str | None) -> str:
     """Return OpenAI model name: explicit arg wins, then ``ORION_OPENAI_MODEL``, else default."""
     if explicit is not None:

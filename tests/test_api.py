@@ -124,6 +124,7 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
     assert "Rate limiting" in desc
     assert "429" in desc
     assert "Readiness" in desc
+    assert "CORS" in desc
     assert "401" in desc
     assert "Authorize" in desc
     for path in ("/v1/plan", "/v1/query"):
