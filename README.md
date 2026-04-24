@@ -131,7 +131,7 @@ pip install -r requirements-api.txt
 # or: pip install -e ".[api]"
 ```
 
-Run from the repository root (auto-generated OpenAPI UI at **http://127.0.0.1:8000/docs** — schemas document optional **`X-API-Key`** / **Bearer** when `ORION_API_KEY` is used):
+Run from the repository root (auto-generated OpenAPI UI at **http://127.0.0.1:8000/docs** — **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`** declare **`security`** so **Authorize** works for **`X-API-Key`** or **Bearer**; leave it empty when the server has no **`ORION_API_KEY`**):
 
 ```bash
 uvicorn app.api:app --reload --host 127.0.0.1 --port 8000

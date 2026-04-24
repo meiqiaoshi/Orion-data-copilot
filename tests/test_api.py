@@ -25,6 +25,7 @@ def test_root_lists_entrypoints(client: TestClient) -> None:
     assert body["service"] == "orion-data-copilot"
     assert body["version"] == __version__
     assert body["docs"] == "/docs"
+    assert body["openapi"] == "/openapi.json"
     assert body["plan"] == "POST /v1/plan"
     assert body["ready"] == "/ready"
 
@@ -118,8 +119,10 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
     assert "429" in desc
     assert "Readiness" in desc
     assert "401" in desc
+    assert "Authorize" in desc
     for path in ("/v1/plan", "/v1/query"):
         post = body["paths"][path]["post"]
+        assert post.get("security") == [{"ApiKeyHeader": []}, {"BearerAuth": []}]
         assert "401" in post["responses"]
         assert (
             post["responses"]["401"]["content"]["application/json"]["schema"].get("$ref")
@@ -129,6 +132,7 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
         ref = post["responses"]["429"]["content"]["application/json"]["schema"].get("$ref")
         assert ref == "#/components/schemas/RateLimitErrorBody"
     v1_ver = body["paths"]["/v1/version"]["get"]
+    assert v1_ver.get("security") == [{"ApiKeyHeader": []}, {"BearerAuth": []}]
     assert (
         v1_ver["responses"]["401"]["content"]["application/json"]["schema"].get("$ref")
         == "#/components/schemas/HttpErrorBody"

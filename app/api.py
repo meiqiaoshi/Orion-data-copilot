@@ -169,6 +169,7 @@ def root() -> dict[str, str]:
         "service": "orion-data-copilot",
         "version": __version__,
         "docs": "/docs",
+        "openapi": "/openapi.json",
         "health": "/health",
         "ready": "/ready",
         "plan": "POST /v1/plan",
@@ -182,7 +183,9 @@ _OPENAPI_AUTH_BLURB = (
     "<key>`** on **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`**. "
     "If the key is missing or wrong, those routes return **`401`** with JSON "
     "**`{\"detail\": \"...\"}`**. "
-    "If that variable is unset, those routes stay open (development default).\n\n"
+    "If that variable is unset, those routes stay open (development default). "
+    "Those operations still declare **OpenAPI `security`** (API key **or** bearer) so **`/docs`** "
+    "offers **Authorize**; leave it empty when the server has no key configured.\n\n"
     "### Rate limiting\n"
     "**`POST /v1/plan`** and **`POST /v1/query`** share a per-client limit (default **`60/minute`**). "
     "Override with **`ORION_API_RATE_LIMIT_POST`** using slowapi syntax (e.g. `120/minute`). "
@@ -224,6 +227,15 @@ def custom_openapi() -> dict[str, Any]:
             },
         }
     )
+    # OR semantics: satisfy ApiKeyHeader *or* BearerAuth (see OpenAPI 3 security array).
+    _auth_security: list[dict[str, list[str]]] = [
+        {"ApiKeyHeader": []},
+        {"BearerAuth": []},
+    ]
+    for path, method in (("/v1/plan", "post"), ("/v1/query", "post"), ("/v1/version", "get")):
+        op = openapi_schema.get("paths", {}).get(path, {}).get(method)
+        if op is not None:
+            op["security"] = _auth_security
     app.openapi_schema = openapi_schema
     return openapi_schema
 
