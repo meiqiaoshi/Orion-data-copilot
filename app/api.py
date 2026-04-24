@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -76,6 +76,25 @@ class RateLimitErrorBody(BaseModel):
     error: str = Field(..., description='Typically begins with "Rate limit exceeded:".')
 
 
+class ReadyResponse(BaseModel):
+    status: Literal["ready"] = "ready"
+    duckdb: str = Field(..., description="Resolved path from `ORION_DUCKDB_PATH` (or default).")
+
+
+class NotReadyErrorBody(BaseModel):
+    """JSON for ``HTTP 503`` from ``GET /ready`` (same shape as other ``HTTPException`` errors)."""
+
+    detail: str
+
+
+_READY_RESPONSES: dict[int | str, dict[str, Any]] = {
+    503: {
+        "description": "Configured DuckDB path is not available (readiness check failed).",
+        "model": NotReadyErrorBody,
+    },
+}
+
+
 _POST_RESPONSES: dict[int | str, dict[str, Any]] = {
     429: {
         "description": "Too many requests from this client IP (slowapi).",
@@ -89,14 +108,14 @@ def health() -> dict[str, str]:
     return {"status": "ok", "version": __version__}
 
 
-@app.get("/ready")
-def ready() -> dict[str, str]:
+@app.get("/ready", response_model=ReadyResponse, responses=_READY_RESPONSES)
+def ready() -> ReadyResponse:
     """Readiness: configured DuckDB path must exist and be readable, or be creatable."""
     ok, err = duckdb_runtime_ready(None)
     path = resolve_duckdb_path(None)
     if not ok:
         raise HTTPException(status_code=503, detail=err)
-    return {"status": "ready", "duckdb": path}
+    return ReadyResponse(duckdb=path)
 
 
 @app.get("/v1/version")

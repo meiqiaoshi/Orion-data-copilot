@@ -39,13 +39,20 @@ def main() -> None:
     st.caption(f"Version {__version__} · same engine as `main.py`")
 
     api_base = os.environ.get("ORION_API_BASE", "").strip().rstrip("/")
+    check_ready = os.environ.get("ORION_API_CHECK_READY", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
     with st.sidebar:
         st.header("Options")
         if api_base:
             st.info(
                 f"**Remote API:** `{api_base}` (`POST /v1/query`). "
-                "Set `ORION_API_KEY` if the server requires it."
+                "Set `ORION_API_KEY` if the server requires it. "
+                "Optional: `ORION_API_CHECK_READY=1` to `GET /ready` before each call."
             )
         use_llm = st.toggle("Use LLM planner (OpenAI)", value=True)
         st.markdown(
@@ -75,7 +82,9 @@ def main() -> None:
         if api_base:
             try:
                 with st.spinner("Calling API..."):
-                    plan_dict, exec_dict = call_v1_query(api_base, text, use_llm)
+                    plan_dict, exec_dict = call_v1_query(
+                        api_base, text, use_llm, check_ready=check_ready
+                    )
             except RuntimeError as exc:
                 st.error(str(exc))
             else:

@@ -120,7 +120,7 @@ streamlit run scripts/streamlit_app.py
 
 The sidebar toggles **LLM vs rules-only** planning (same behavior as `python main.py --no-llm` when disabled). Recent queries appear in the sidebar for quick reference.
 
-**Remote API mode (optional):** set **`ORION_API_BASE`** (e.g. `http://127.0.0.1:8000` where `uvicorn` runs) so Streamlit **POST**s to **`/v1/query`** instead of importing `app` in-process. Use **`ORION_API_KEY`** if the server enforces it. The API server does planning and execution (DuckDB paths and keys follow **its** environment). `app/remote_query.py` implements the client.
+**Remote API mode (optional):** set **`ORION_API_BASE`** (e.g. `http://127.0.0.1:8000` where `uvicorn` runs) so Streamlit **POST**s to **`/v1/query`** instead of importing `app` in-process. Use **`ORION_API_KEY`** if the server enforces it. Set **`ORION_API_CHECK_READY=1`** to **`GET /ready`** before each query (fails fast if the server’s DuckDB path is not usable). The API server does planning and execution (DuckDB paths and keys follow **its** environment). `app/remote_query.py` implements the client (`check_v1_ready`, `call_v1_query`).
 
 ## HTTP API (FastAPI, optional)
 

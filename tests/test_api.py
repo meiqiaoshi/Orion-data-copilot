@@ -122,6 +122,15 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
         assert "429" in post["responses"]
         ref = post["responses"]["429"]["content"]["application/json"]["schema"].get("$ref")
         assert ref == "#/components/schemas/RateLimitErrorBody"
+    ready_get = body["paths"]["/ready"]["get"]
+    assert (
+        ready_get["responses"]["200"]["content"]["application/json"]["schema"].get("$ref")
+        == "#/components/schemas/ReadyResponse"
+    )
+    assert (
+        ready_get["responses"]["503"]["content"]["application/json"]["schema"].get("$ref")
+        == "#/components/schemas/NotReadyErrorBody"
+    )
 
 
 def test_query_rules_only(client: TestClient) -> None:
