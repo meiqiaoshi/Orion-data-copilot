@@ -25,6 +25,7 @@ def test_root_lists_entrypoints(client: TestClient) -> None:
     assert body["service"] == "orion-data-copilot"
     assert body["version"] == __version__
     assert body["docs"] == "/docs"
+    assert body["redoc"] == "/redoc"
     assert body["openapi"] == "/openapi.json"
     assert body["plan"] == "POST /v1/plan"
     assert body["ready"] == "/ready"
@@ -105,6 +106,11 @@ def test_openapi_docs_available(client: TestClient) -> None:
     assert r.status_code == 200
 
 
+def test_redoc_available(client: TestClient) -> None:
+    r = client.get("/redoc")
+    assert r.status_code == 200
+
+
 def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> None:
     r = client.get("/openapi.json")
     assert r.status_code == 200
@@ -146,6 +152,14 @@ def test_openapi_json_documents_optional_api_key_schemes(client: TestClient) -> 
         ready_get["responses"]["503"]["content"]["application/json"]["schema"].get("$ref")
         == "#/components/schemas/HttpErrorBody"
     )
+    tag_names = {t["name"] for t in body.get("tags", [])}
+    assert tag_names == {"probes", "v1", "service"}
+    assert body["paths"]["/health"]["get"]["tags"] == ["probes"]
+    assert body["paths"]["/ready"]["get"]["tags"] == ["probes"]
+    assert body["paths"]["/v1/version"]["get"]["tags"] == ["v1"]
+    assert body["paths"]["/v1/plan"]["post"]["tags"] == ["v1"]
+    assert body["paths"]["/v1/query"]["post"]["tags"] == ["v1"]
+    assert body["paths"]["/"]["get"]["tags"] == ["service"]
 
 
 def test_query_rules_only(client: TestClient) -> None:

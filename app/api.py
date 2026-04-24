@@ -22,10 +22,26 @@ from app.planner import plan_query
 from app.schemas import UserQuery
 from app.version import __version__
 
+_OPENAPI_TAGS: list[dict[str, str]] = [
+    {
+        "name": "probes",
+        "description": "Liveness (`/health`) and readiness (`/ready`) for orchestration.",
+    },
+    {
+        "name": "v1",
+        "description": "Version, planning, and query execution over pipeline metadata.",
+    },
+    {
+        "name": "service",
+        "description": "Entry point and documentation links.",
+    },
+]
+
 app = FastAPI(
     title="Orion Data Copilot",
     description="Natural-language queries against pipeline metadata (IngestFlow, SentinelDQ).",
     version=__version__,
+    openapi_tags=_OPENAPI_TAGS,
 )
 
 limiter = Limiter(key_func=get_remote_address)
@@ -114,12 +130,12 @@ _V1_VERSION_RESPONSES: dict[int | str, dict[str, Any]] = {
 }
 
 
-@app.get("/health")
+@app.get("/health", tags=["probes"])
 def health() -> dict[str, str]:
     return {"status": "ok", "version": __version__}
 
 
-@app.get("/ready", response_model=ReadyResponse, responses=_READY_RESPONSES)
+@app.get("/ready", response_model=ReadyResponse, responses=_READY_RESPONSES, tags=["probes"])
 def ready() -> ReadyResponse:
     """Readiness: configured DuckDB path must exist and be readable, or be creatable."""
     ok, err = duckdb_runtime_ready(None)
@@ -129,13 +145,13 @@ def ready() -> ReadyResponse:
     return ReadyResponse(duckdb=path)
 
 
-@app.get("/v1/version", responses=_V1_VERSION_RESPONSES)
+@app.get("/v1/version", responses=_V1_VERSION_RESPONSES, tags=["v1"])
 def version_info(_: None = Depends(verify_api_key_if_configured)) -> dict[str, str]:
     return {"version": __version__}
 
 
 @limiter.limit(_LIMIT_POST)
-@app.post("/v1/plan", response_model=PlanResponse, responses=_POST_RESPONSES)
+@app.post("/v1/plan", response_model=PlanResponse, responses=_POST_RESPONSES, tags=["v1"])
 def plan_only(
     request: Request,
     req: QueryRequest,
@@ -148,7 +164,7 @@ def plan_only(
 
 
 @limiter.limit(_LIMIT_POST)
-@app.post("/v1/query", response_model=QueryResponse, responses=_POST_RESPONSES)
+@app.post("/v1/query", response_model=QueryResponse, responses=_POST_RESPONSES, tags=["v1"])
 def run_query(
     request: Request,
     req: QueryRequest,
@@ -163,12 +179,13 @@ def run_query(
     )
 
 
-@app.get("/")
+@app.get("/", tags=["service"])
 def root() -> dict[str, str]:
     return {
         "service": "orion-data-copilot",
         "version": __version__,
         "docs": "/docs",
+        "redoc": "/redoc",
         "openapi": "/openapi.json",
         "health": "/health",
         "ready": "/ready",
@@ -212,6 +229,7 @@ def custom_openapi() -> dict[str, Any]:
         description=(app.description or "") + _OPENAPI_AUTH_BLURB,
         routes=app.routes,
     )
+    openapi_schema["tags"] = list(_OPENAPI_TAGS)
     openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {}).update(
         {
             "ApiKeyHeader": {
