@@ -99,10 +99,13 @@ make install-dev   # same as pip install -e ".[dev,api]"
 make lint
 make test
 make test-fast     # pytest -m "not integration" (skips DuckDB ingestflow tests)
+make verify        # lint + test-fast (matches the CI “fast” signal)
 # make api           # uvicorn app.api:app (install [api] first)
 # make docker-build  # needs Docker; then make docker-run
 # make compose-up    # docker compose up --build (see docker-compose.yml)
 ```
+
+Before you push, run **`make verify`** (same shell must use your project Python, e.g. conda env `dev`). It runs **`ruff`** plus **`pytest -m "not integration"`**, matching the fast CI job described below.
 
 See [`CHANGELOG.md`](CHANGELOG.md) for a coarse history of shipped features.
 
