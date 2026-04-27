@@ -6,6 +6,39 @@ Natural-language interface for querying **data platform metadata**: pipeline run
 
 For design details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Example prompts are in [`docs/USE_CASES.md`](docs/USE_CASES.md).
 
+## Quickstart (rules-only, no OpenAI needed)
+
+Install and run the interactive CLI in **rules-only** mode (no `OPENAI_API_KEY` required):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+orion-copilot --no-llm
+```
+
+At the `Query>` prompt, try a **sanity check** that does not require DuckDB or SentinelDQ:
+
+```text
+what is the weather
+```
+
+Expected behavior: the planner returns intent `unknown` (stable rules-only fallback), and you get a readable response (no stacktrace).
+
+If you have a DuckDB metadata file with an `ingestion_runs` table (default `./warehouse.duckdb`, or set `ORION_DUCKDB_PATH` / pass `--duckdb`), try:
+
+```text
+Show failed ingestion jobs in the last 7 days
+Show recent ingestion runs for sample.yaml
+Why did pipeline orders fail yesterday?
+```
+
+If you have `sentineldq` installed/configured, try:
+
+```text
+Any data quality alerts for dataset raw_orders?
+```
+
 ## What it does
 
 - **Planner**: Tries an **LLM** (OpenAI) first, then falls back to **rule-based** classification (`app/planner.py`).
