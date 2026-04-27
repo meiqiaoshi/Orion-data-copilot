@@ -63,6 +63,33 @@ def test_query_sentineldq_missing_package_error(mock_get: object) -> None:
     assert "package is not available" in result.output.lower()
 
 
+@patch("app.executor.get_recent_dq_alerts")
+def test_query_sentineldq_import_error_message(mock_get: object) -> None:
+    mock_get.return_value = [{"error": "cannot import name 'get_recent_alerts' from 'sentineldq'"}]
+
+    result = execute_plan(_plan("query_sentineldq_issues"))
+    assert result.status == "error"
+    assert result.source == "sentineldq"
+    assert "could not be imported" in result.output.lower()
+
+
+@patch("app.executor.get_failed_ingestion_runs")
+def test_query_ingestion_runs_missing_ingestion_runs_table(mock_get: object) -> None:
+    mock_get.return_value = [
+        {
+            "error": (
+                "Catalog Error: Table with name ingestion_runs does not exist!\n"
+                "Did you mean \"sqlite_master\"?"
+            )
+        }
+    ]
+
+    result = execute_plan(_plan("query_ingestion_runs"))
+    assert result.status == "error"
+    assert result.source == "ingestflow"
+    assert "'ingestion_runs' table was not found" in result.output.lower()
+
+
 def test_clarify_or_fallback_not_implemented() -> None:
     result = execute_plan(_plan("clarify_or_fallback"))
     assert result.status == "not_implemented"

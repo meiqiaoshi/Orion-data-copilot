@@ -26,7 +26,32 @@ def _build_user_friendly_error(source: str, error_text: str) -> str:
             "importable before running this query."
         )
 
+    if "modulenotfounderror" in normalized and "sentineldq" in normalized:
+        return (
+            "I couldn't access SentinelDQ because the package is not available in "
+            "the current environment. Please install SentinelDQ or make sure it is "
+            "importable before running this query."
+        )
+
+    if "import" in normalized and "sentineldq" in normalized and (
+        "cannot import" in normalized or "could not import" in normalized
+    ):
+        return (
+            "I couldn't access SentinelDQ because it could not be imported in "
+            "the current environment. Please install SentinelDQ or verify your "
+            "Python environment and PYTHONPATH."
+        )
+
     if "table with name ingestion_runs does not exist" in normalized:
+        return (
+            "I couldn't query the ingestion metadata store because the "
+            "'ingestion_runs' table was not found. Please verify the DuckDB path "
+            "and confirm the IngestFlow schema exists."
+        )
+
+    if "ingestion_runs" in normalized and (
+        "does not exist" in normalized or "not found" in normalized or "cannot find" in normalized
+    ):
         return (
             "I couldn't query the ingestion metadata store because the "
             "'ingestion_runs' table was not found. Please verify the DuckDB path "
