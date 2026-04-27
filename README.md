@@ -39,6 +39,8 @@ If you have `sentineldq` installed/configured, try:
 Any data quality alerts for dataset raw_orders?
 ```
 
+For a copy/paste acceptance checklist (CLI + API), see [`docs/USE_CASES.md`](docs/USE_CASES.md).
+
 ## What it does
 
 - **Planner**: Tries an **LLM** (OpenAI) first, then falls back to **rule-based** classification (`app/planner.py`).
