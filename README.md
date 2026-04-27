@@ -127,6 +127,37 @@ pre-commit run --all-files   # once, to verify hooks
 - **SentinelDQ**: Must be importable and configured as expected by `sentineldq.metadata.store.get_recent_alerts` for DQ queries to succeed.
 - **HTTP API / Compose**: Optional shared secret **`ORION_API_KEY`** (see HTTP API section). For `docker compose`, copy [`.env.example`](.env.example) to `.env` if you want keys loaded from a file.
 
+## Troubleshooting
+
+- **I want deterministic behavior / no OpenAI calls**
+  - Use **`python main.py --no-llm`** or **`orion-copilot --no-llm`** (rules-only planner).
+
+- **DuckDB path problems (missing file / bad mount / wrong working directory)**
+  - Set **`ORION_DUCKDB_PATH`** or pass **`--duckdb PATH`** so the process points at the real file.
+  - For HTTP API: **`GET /ready`** returns **`503`** when the DuckDB path is not usable (common causes: parent directory missing, permissions, bad volume mount). **`GET /health`** can still be **`200`** even when DuckDB is not usable (liveness vs readiness).
+
+- **`ingestion_runs` table missing / schema mismatch**
+  - IngestFlow queries require a DuckDB file that contains **`ingestion_runs`** populated by your pipelines (see IngestFlow docs). If you only want to validate the project wiring, use the rules-only sanity query from [`docs/USE_CASES.md`](docs/USE_CASES.md).
+
+- **SentinelDQ queries fail / DQ intent never runs**
+  - Install/configure **`sentineldq`** and ensure `sentineldq.metadata.store.get_recent_alerts` works in your environment. Without SentinelDQ, RCA-style answers may still print failure details from IngestFlow, but DQ ranking needs the package.
+
+- **LLM planner errors / unexpected behavior**
+  - Ensure **`OPENAI_API_KEY`** is set for LLM mode. For debugging, compare **`POST /v1/plan`** outputs with **`use_llm: false` vs `true`**.
+  - If you need a stable baseline for CI/docs, prefer **`use_llm: false`**.
+
+- **HTTP API auth (`401`)**
+  - If **`ORION_API_KEY`** is set, **`/v1/plan`**, **`/v1/query`**, and **`/v1/version`** require **`X-API-Key`** or **`Authorization: Bearer`**. **`/health`**, **`/ready`**, and **`/`** stay unauthenticated.
+
+- **HTTP API rate limits (`429`)**
+  - **`POST /v1/plan`** and **`POST /v1/query`** are rate-limited per IP (slowapi). Tune **`ORION_API_RATE_LIMIT_POST`** or set it to **`off`** for local development (see HTTP API section above).
+
+- **Streamlit remote mode fails fast**
+  - When using **`ORION_API_BASE`**, set **`ORION_API_KEY`** if the API enforces auth, and consider **`ORION_API_CHECK_READY=1`** to **`GET /ready`** before each query.
+
+- **Docker / Compose**
+  - Ensure the container can see your DuckDB file (bind mount / volume path) and that **`ORION_DUCKDB_PATH`** matches the in-container path (default **`/app/warehouse.duckdb`** in the examples).
+
 ## Run
 
 From the repository root:

@@ -186,6 +186,29 @@ def test_plan_rules_only_no_execution(client: TestClient) -> None:
     assert body["plan"]["intent"] == "unknown"
 
 
+def test_plan_never_calls_execute_plan_even_when_plan_hits_connectors(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _boom_execute_plan(*args: object, **kwargs: object) -> None:
+        raise AssertionError("execute_plan should not be called for POST /v1/plan")
+
+    monkeypatch.setattr("app.api.execute_plan", _boom_execute_plan)
+
+    r = client.post(
+        "/v1/plan",
+        json={
+            "query": "Show failed ingestion jobs in the last 7 days",
+            "use_llm": False,
+        },
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body.keys()) == {"plan"}
+    assert body["plan"]["intent"] == "pipeline_failure_lookup"
+    assert body["plan"]["action"] == "query_ingestion_runs"
+
+
 def test_query_rejects_whitespace_only(client: TestClient) -> None:
     r = client.post("/v1/query", json={"query": "   ", "use_llm": False})
     assert r.status_code == 422
