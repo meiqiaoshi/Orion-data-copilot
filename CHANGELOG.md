@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format is loosely i
 
 ## [Unreleased]
 
+### Added
+
+- **CLI one-shot mode**: `orion-copilot --query "..."` runs a single query and exits (non-interactive).
+- **CLI plan-only mode**: `orion-copilot --plan-only` prints the plan without executing connectors (parity with `POST /v1/plan`).
+- **CLI JSON output**: `orion-copilot --json --query "..."` prints a single JSON object to stdout for scripting; combines with `--plan-only` to emit plan JSON only.
+- **Verification shortcut**: `make verify` runs Ruff + fast pytest (`-m "not integration"`), matching the CI fast signal.
+
+### Changed
+
+- CI `test-fast` now runs `make verify` (lint + fast tests) for consistency with local workflows.
+
+### Fixed
+
+- More robust user-friendly error messages for common DuckDB/SentinelDQ failure modes (missing `ingestion_runs`, SentinelDQ import errors).
+
 ## [0.3.0] - 2026-04-24
 
 ### Added
