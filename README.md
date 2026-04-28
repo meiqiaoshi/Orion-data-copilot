@@ -17,6 +17,13 @@ pip install -e .
 orion-copilot --no-llm
 ```
 
+One-shot mode (run once and exit):
+
+```bash
+orion-copilot --no-llm --query "what is the weather"
+orion-copilot --no-llm --plan-only --query "Show failed ingestion jobs in the last 7 days"
+```
+
 At the `Query>` prompt, try a **sanity check** that does not require DuckDB or SentinelDQ:
 
 ```text
