@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 
 from app.executor import execute_plan
+from app.json_serialization import execution_result_to_dict, plan_result_to_dict
 from app.planner import plan_query
 from app.schemas import UserQuery
 from app.version import __version__
@@ -38,10 +40,18 @@ def main() -> None:
         action="store_true",
         help="Plan only (skip connector execution).",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Print JSON for one-shot mode (requires --query).",
+    )
     args = parser.parse_args()
     if args.duckdb is not None and args.duckdb.strip():
         os.environ["ORION_DUCKDB_PATH"] = args.duckdb.strip()
     use_llm = not args.no_llm
+
+    if args.json and args.query is None:
+        parser.error("--json requires --query")
 
     if args.query is not None:
         user_input = args.query.strip()
@@ -50,6 +60,18 @@ def main() -> None:
 
         query = UserQuery(raw_text=user_input)
         plan = plan_query(query, use_llm=use_llm)
+
+        if args.json:
+            if args.plan_only:
+                payload = {"plan": plan_result_to_dict(plan)}
+            else:
+                execution = execute_plan(plan)
+                payload = {
+                    "plan": plan_result_to_dict(plan),
+                    "execution": execution_result_to_dict(execution),
+                }
+            print(json.dumps(payload, ensure_ascii=False))
+            return
 
         print("--- Plan ---")
         print(f"Planner: {plan.planner_source}")

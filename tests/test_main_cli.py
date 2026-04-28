@@ -20,6 +20,7 @@ def test_main_help_includes_no_llm() -> None:
     assert "--duckdb" in result.stdout
     assert "--query" in result.stdout
     assert "--plan-only" in result.stdout
+    assert "--json" in result.stdout
 
 
 def test_main_version() -> None:
@@ -75,3 +76,27 @@ def test_main_query_one_shot_plan_only_skips_execution() -> None:
     assert result.returncode == 0
     assert "Intent: unknown" in result.stdout
     assert "--- Execution ---" not in result.stdout
+
+
+def test_main_query_one_shot_json_plan_only() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(_ROOT / "main.py"),
+            "--no-llm",
+            "--plan-only",
+            "--json",
+            "--query",
+            "what is the weather",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+    assert result.returncode == 0
+    # JSON mode should not print the human-formatted sections.
+    assert "--- Plan ---" not in result.stdout
+    assert "--- Execution ---" not in result.stdout
+    assert "\"plan\"" in result.stdout
+    assert "\"intent\": \"unknown\"" in result.stdout
