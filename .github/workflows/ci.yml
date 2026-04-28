@@ -28,8 +28,8 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev,api]"
 
-      - name: Run tests (exclude integration)
-        run: pytest -q -m "not integration"
+      - name: Verify (lint + fast tests)
+        run: make verify
 
   test:
     runs-on: ubuntu-latest
