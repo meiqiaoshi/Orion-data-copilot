@@ -22,6 +22,13 @@ One-shot mode (run once and exit):
 ```bash
 orion-copilot --no-llm --query "what is the weather"
 orion-copilot --no-llm --plan-only --query "Show failed ingestion jobs in the last 7 days"
+orion-copilot --no-llm --plan-only --json --query "Show failed ingestion jobs in the last 7 days"
+```
+
+`--json` prints **one JSON object per run** on stdout (easy to pipe into scripts):
+
+```bash
+orion-copilot --no-llm --json --query "what is the weather" | python -c 'import json,sys; print(json.load(sys.stdin)["plan"]["intent"])'
 ```
 
 At the `Query>` prompt, try a **sanity check** that does not require DuckDB or SentinelDQ:

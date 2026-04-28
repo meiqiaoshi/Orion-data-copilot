@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -100,3 +101,39 @@ def test_main_query_one_shot_json_plan_only() -> None:
     assert "--- Execution ---" not in result.stdout
     assert "\"plan\"" in result.stdout
     assert "\"intent\": \"unknown\"" in result.stdout
+
+
+def test_main_json_requires_query() -> None:
+    result = subprocess.run(
+        [sys.executable, str(_ROOT / "main.py"), "--no-llm", "--json"],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+    assert result.returncode != 0
+    combined = (result.stderr or "") + (result.stdout or "")
+    assert "--json requires --query" in combined
+
+
+def test_main_query_one_shot_json_includes_execution_without_plan_only() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(_ROOT / "main.py"),
+            "--no-llm",
+            "--json",
+            "--query",
+            "what is the weather",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+    assert result.returncode == 0
+    payload = json.loads(result.stdout.strip())
+    assert set(payload.keys()) == {"plan", "execution"}
+    assert payload["plan"]["intent"] == "unknown"
+    assert payload["plan"]["action"] == "clarify_or_fallback"
+    assert payload["execution"]["status"] == "not_implemented"
