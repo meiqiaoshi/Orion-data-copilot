@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format is loosely i
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-04-28
+
 ### Added
 
 - **CLI one-shot mode**: `orion-copilot --query "..."` runs a single query and exits (non-interactive).
