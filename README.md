@@ -253,6 +253,23 @@ docker pull ghcr.io/<github-owner>/<github-repo-in-lowercase>:latest
 
 The package may be **private** until you change visibility under **Repository → Packages**.
 
+### Releases (tags → GHCR image)
+
+Typical release sequence:
+
+1. Bump **`app/version.py`** and record notes under **`CHANGELOG.md`** (keep `[Unreleased]` empty unless you’re staging work-in-progress).
+2. Merge to **`main`** and confirm CI is green.
+3. Tag **`vX.Y.Z`** (must match `v*` for the GHCR workflow) and push the tag.
+
+Example:
+
+```bash
+git tag -a v0.3.1 -m "Release v0.3.1"
+git push origin v0.3.1
+```
+
+This triggers [`.github/workflows/publish-ghcr.yml`](.github/workflows/publish-ghcr.yml) (also runnable manually from **Actions → Publish to GHCR**).
+
 **Compose (optional):** copy [`.env.example`](.env.example) to `.env` and adjust keys, ensure `./warehouse.duckdb` exists (or comment out the `volumes` block in [`docker-compose.yml`](docker-compose.yml)), then:
 
 ```bash
