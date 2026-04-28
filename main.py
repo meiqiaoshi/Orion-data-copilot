@@ -33,6 +33,11 @@ def main() -> None:
         default=None,
         help="Run a single query and exit (non-interactive).",
     )
+    parser.add_argument(
+        "--plan-only",
+        action="store_true",
+        help="Plan only (skip connector execution).",
+    )
     args = parser.parse_args()
     if args.duckdb is not None and args.duckdb.strip():
         os.environ["ORION_DUCKDB_PATH"] = args.duckdb.strip()
@@ -45,7 +50,6 @@ def main() -> None:
 
         query = UserQuery(raw_text=user_input)
         plan = plan_query(query, use_llm=use_llm)
-        execution = execute_plan(plan)
 
         print("--- Plan ---")
         print(f"Planner: {plan.planner_source}")
@@ -72,6 +76,11 @@ def main() -> None:
         else:
             print("Entity Filter: none")
 
+        if args.plan_only:
+            print("-----------------")
+            return
+
+        execution = execute_plan(plan)
         print("\n--- Execution ---")
         print(f"Status: {execution.status}")
         print(f"Source: {execution.source}")
@@ -96,7 +105,6 @@ def main() -> None:
 
         query = UserQuery(raw_text=user_input)
         plan = plan_query(query, use_llm=use_llm)
-        execution = execute_plan(plan)
 
         print("\n--- Plan ---")
         print(f"Planner: {plan.planner_source}")
@@ -123,6 +131,11 @@ def main() -> None:
         else:
             print("Entity Filter: none")
 
+        if args.plan_only:
+            print("-----------------\n")
+            continue
+
+        execution = execute_plan(plan)
         print("\n--- Execution ---")
         print(f"Status: {execution.status}")
         print(f"Source: {execution.source}")
