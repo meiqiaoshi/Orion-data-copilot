@@ -27,10 +27,57 @@ def main() -> None:
         default=None,
         help="Path to IngestFlow DuckDB (sets ORION_DUCKDB_PATH for this process).",
     )
+    parser.add_argument(
+        "--query",
+        metavar="TEXT",
+        default=None,
+        help="Run a single query and exit (non-interactive).",
+    )
     args = parser.parse_args()
     if args.duckdb is not None and args.duckdb.strip():
         os.environ["ORION_DUCKDB_PATH"] = args.duckdb.strip()
     use_llm = not args.no_llm
+
+    if args.query is not None:
+        user_input = args.query.strip()
+        if not user_input:
+            parser.error("--query must not be empty")
+
+        query = UserQuery(raw_text=user_input)
+        plan = plan_query(query, use_llm=use_llm)
+        execution = execute_plan(plan)
+
+        print("--- Plan ---")
+        print(f"Planner: {plan.planner_source}")
+        print(f"Intent: {plan.intent}")
+        print(f"Action: {plan.action}")
+        print(f"Message: {plan.message}")
+
+        if plan.time_filter is not None:
+            print(
+                "Time Filter: "
+                f"{plan.time_filter.label} "
+                f"({plan.time_filter.start_time} -> {plan.time_filter.end_time})"
+            )
+        else:
+            print("Time Filter: none")
+
+        if plan.entity_filter is not None:
+            print(
+                "Entity Filter: "
+                f"config_path={plan.entity_filter.config_path}, "
+                f"pipeline_name={plan.entity_filter.pipeline_name}, "
+                f"dataset_name={plan.entity_filter.dataset_name}"
+            )
+        else:
+            print("Entity Filter: none")
+
+        print("\n--- Execution ---")
+        print(f"Status: {execution.status}")
+        print(f"Source: {execution.source}")
+        print(f"Output: {execution.output}")
+        print("-----------------")
+        return
 
     print("Orion Data Copilot")
     if not use_llm:
