@@ -3,6 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import patch
 
+import pytest
+
+pytest.importorskip("sentineldq")
+
 from app.connectors.sentineldq import get_recent_dq_alerts
 from app.schemas import EntityFilter, TimeFilter
 
