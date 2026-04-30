@@ -80,6 +80,19 @@ jobs:
         run: |
           set -eux
           docker run -d --name odc -p 8765:8000 orion-data-copilot:ci
-          curl -sf --retry 30 --retry-delay 1 --retry-connrefused http://127.0.0.1:8765/health
-          curl -sf --retry 5 --retry-delay 1 --retry-connrefused http://127.0.0.1:8765/ready
+          # Wait for the container to start accepting connections; if it exits, print logs.
+          for i in $(seq 1 60); do
+            if ! docker ps --format '{{.Names}}' | grep -qx odc; then
+              echo "Container exited before becoming ready."
+              docker ps -a
+              docker logs odc || true
+              exit 1
+            fi
+            if curl -sf http://127.0.0.1:8765/health >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8765/health
+          curl -sf --retry 10 --retry-delay 1 --retry-connrefused http://127.0.0.1:8765/ready
           docker rm -f odc
